@@ -1,6 +1,6 @@
-## OOSD-Accommodation
+# OOSD-Accommodation
 
-# Team Members
+## Team Members
 * Reece Benson
 * Chris Tapply
 * Jonas Arud
