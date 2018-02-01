@@ -122,7 +122,7 @@ public class ViewPermissions extends GUI {
         /**
          * Style Elements
          */
-        contentBox.setId("loginBox");
+        contentBox.setId("contentBox");
         contentBox.setFitToWidth(true);
         contentBox.setFitToHeight(true);
         

@@ -1,18 +1,8 @@
-/*
-    Light Blue: rgb(61, 148, 255);
-
-    Medium Blue: rgb(0, 139, 204);
-
-    Dark Blue: rgb(0, 91, 204);
-*/
-
 #topBox {
-    /*-fx-background-color: rgb(0, 139, 204);*/
     -fx-background-color: rgb(55, 62, 74);
 }
 
 #loginBox {
-    /*-fx-background-color: rgb(61, 148, 255);*/
     -fx-background-color: rgb(48, 54, 65);
 }
 

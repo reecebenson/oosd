@@ -1,22 +1,20 @@
-/*
-    Light Blue: rgb(61, 148, 255);
-
-    Medium Blue: rgb(0, 139, 204);
-
-    Dark Blue: rgb(0, 91, 204);
-*/
-
 #topBox {
-    /*-fx-background-color: rgb(0, 139, 204);*/
     -fx-background-color: rgb(55, 62, 74);
 }
 
-#loginBox {
-    /*-fx-background-color: rgb(61, 148, 255);*/
+#contentBox {
     -fx-background-color: rgb(48, 54, 65);
 }
 
-#loginBtn {
+#footerBox {
+    -fx-background-color: rgb(55, 62, 74);
+}
+
+.dark-bg-content {
+    -fx-background-color: rgb(48, 54, 65);
+}
+
+.button {
     -fx-background-color: #373e4a;
     -fx-border-color: #454a54;
     -fx-border-width: 1px;
@@ -27,38 +25,12 @@
     transition: all 300ms ease-in-out;
 }
 
-#loginBtn:hover {
+.button:hover {
     -fx-background-color: #454a54;
     -fx-border-color: #373e4a;
 }
 
-#tfUsername:focused, #tfPassword:focused {
-    -fx-background-color: #454a54;
-}
-
-#hboxUsernameFocused, #hboxPasswordFocused {
-    -fx-background-color: #454a54;
-    -fx-border-color: #454a54;
-    -fx-border-style: solid;
-    -fx-border-width: 1px;
-    -fx-border-radius: 3px;
-}
-
-#lblUsername, #lblPassword {
-    -fx-text-fill: white;
-}
-
-#hboxUsername, #hboxPassword {
-    -fx-background-color: #373e4a;
-    -fx-border-color: #454a54;
-    -fx-border-style: solid;
-    -fx-border-width: 1px;
-    -fx-border-radius: 3px;
-    transition: all 300ms ease-in-out;
-    background-clip: padding-box;
-}
-
-#tfUsername, #tfPassword {
+.text-field {
     -fx-padding: 6px 12px 6px 12px;
     -fx-border-radius: 3px;
     -fx-background-color: transparent;
@@ -69,4 +41,66 @@
     width: 100%;
     margin-bottom: 0;
     display: table-cell;
+}
+
+.text-field:focused {
+    -fx-background-color: #454a54;
+}
+
+.text-field-box {
+    -fx-background-color: #373e4a;
+    -fx-border-color: #454a54;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    transition: all 300ms ease-in-out;
+    background-clip: padding-box;
+}
+
+.text-field-box-focused {
+    -fx-background-color: #454a54;
+    -fx-border-color: #454a54;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+}
+
+.label {
+    -fx-text-fill: white;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-opacity: 0;
+}
+
+.tab-pane {
+    -fx-tab-min-width:90px;
+}
+
+.tab {
+    -fx-background-insets: 0 1 0 1,0,0;
+}
+.tab-pane .tab {
+    -fx-background-color: #e6e6e6;
+
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: rgb(48, 54, 65);
+}
+
+.tab .tab-label { 
+    -fx-alignment: CENTER;
+    -fx-text-fill: #828282;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.tab:selected .tab-label { 
+    -fx-alignment: CENTER;
+    -fx-text-fill: white;
+}
+
+.tab-content {
+    -fx-background-color: rgb(48, 54, 65);
 }
