@@ -15,6 +15,30 @@
     -fx-background-color: rgb(55, 62, 74);
 }
 
+.combo-box {
+    -fx-background-color: #373e4a;
+    -fx-border-color: #454a54;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    transition: all 300ms ease-in-out;
+    background-clip: padding-box;
+}
+
+.combo-box .cell {
+    -fx-background-color: #373e4a;
+    -fx-text-fill: lightgray;
+}
+
+.combo-box .cell:hover {
+    -fx-background-color: #454a54;
+}
+
+.combo-box .cell:selected {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
 .button, #viewPermsBtn, #logoutBtn {
     -fx-background-color: #373e4a;
     -fx-border-color: #454a54;

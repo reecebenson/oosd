@@ -11,6 +11,8 @@ import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Database;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -18,10 +20,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -33,6 +35,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
 /**
@@ -41,79 +44,158 @@ import javafx.scene.text.TextFlow;
  */
 public class Browser extends GUI {
     /**
-     * Variables
+     * Variables for "Browser" GUI
      */
-    TableView<LeaseData> tbl = new TableView<>();
+    
+    // Panes
     HBox headerBox = new HBox();
     ScrollPane middleBox = new ScrollPane();
     FlowPane footerBox = new FlowPane(Orientation.HORIZONTAL, 15, 15);
     
+    // Table
+    TableView<LeaseData> tbl = new TableView<>();
+    
+    // GUI Size (default: 800)
+    private int _size_xy = 800;
+    
+    /**
+     * @name    buildHeader
+     * @desc    Create, style and build the Header of the "Browser" GUI
+     */
     private void buildHeader() {
-        Image logoImg = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png")) {};
+        /**
+         * Declare Elements
+         */
+        // Panes
+        VBox headerLeft = new VBox();
+        VBox headerRight = new VBox();
+        Region headerSpacer = new Region();
+        FlowPane btnStrip = new FlowPane(Orientation.HORIZONTAL, 10, 10);
+        // Buttons
+        ComboBox cbHalls;
+        Button btnViewPerms = new Button();
+        Button btnLogout = new Button();
+        // Images
+        Image logo = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png")) {};
+        ImageView logoView = new ImageView(logo);
+        // Text
+        TextFlow loggedInAs = new TextFlow();
+        Text lblLoggedInAs, lblLoggedInUsername;
         
-        // Configure our Elements
-        // --> HORIZ BOX
+        /**
+         * Style Elements
+         */
+        // Headers
         headerBox.setPadding(new Insets(25, 25, 25, 25));
         headerBox.setId("topBox");
+        headerLeft.setAlignment(Pos.CENTER_LEFT);
+        headerRight.setAlignment(Pos.TOP_RIGHT);
+        headerSpacer.setPrefWidth(100);
+        HBox.setHgrow(headerSpacer, Priority.ALWAYS);
+        btnStrip.setAlignment(Pos.TOP_RIGHT);
+        // Logo
+        logoView.setPreserveRatio(true);
+        logoView.setFitWidth(250);
+        // Logged In As/Username Flow
+        loggedInAs.setTextAlignment(TextAlignment.RIGHT);
+        // Logged In As
+        lblLoggedInAs = new Text("Logged in as");
+        lblLoggedInAs.setFill(Color.WHITE);
+        // Logged In Username
+        lblLoggedInUsername = new Text(" " + User.getUsername() + "\n");
+        lblLoggedInUsername.setFill(Color.WHITE);
+        lblLoggedInUsername.setStyle("-fx-font-weight: bold");
+        // Hall Selector
+        cbHalls = new ComboBox(Database.getHallNames(true));
+        cbHalls.setId("hallSelector");
+        cbHalls.setStyle("-fx-text-fill: white");
+        cbHalls.setPadding(new Insets(11, 5, 11, 5));
+        cbHalls.setValue("All");
+        cbHalls.setPrefWidth(150.0);
+        cbHalls.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> cbHalls_Changed(cbHalls, options, oldValue, newValue));
+        // View Permissions
+        btnViewPerms.getStyleClass().add("button");
+        btnViewPerms.setText("View Permissions");
+        btnViewPerms.setAlignment(Pos.CENTER);
+        // Logout Button
+        btnLogout.setId("logoutBtn");
+        btnLogout.setText("Logout");
+        btnLogout.setVisible(true);
+        btnLogout.setAlignment(Pos.CENTER);
+        btnLogout.setOnAction((ActionEvent e) -> btnLogout_Click(e));
         
-        // --> HORIZ BOX DIRECTIONS
-        Region topMid = new Region();
-        topMid.setPrefWidth(100);
-        HBox.setHgrow(topMid, Priority.ALWAYS);
-        
-        VBox       topLeftBox = new VBox();
-        VBox      topRightBox = new VBox();
-        topLeftBox.setAlignment(Pos.CENTER_LEFT);
-        topRightBox.setAlignment(Pos.TOP_RIGHT);
-        
-        // --> LEFT BOX
-        ImageView logoImgV = new ImageView(logoImg);
-        logoImgV.setPreserveRatio(true);
-        logoImgV.setFitWidth(250);
-        
-        // --> RIGHT BOX
-        TextFlow loggedInAsTF = new TextFlow();
-        Text loggedInAs = new Text("Logged in as");
-        Text loggedInUsername = new Text(" " + User.getUsername() + "\n");
-        loggedInAs.setFill(Color.WHITE);
-        loggedInUsername.setFill(Color.WHITE);
-        loggedInUsername.setStyle("-fx-font-weight: bold");
-        loggedInAsTF.getChildren().addAll(loggedInAs, loggedInUsername);
-        
-        // --> LOGOUT BUTTON
-        Button logoutBtn = new Button();
-        logoutBtn.setId("logoutBtn");
-        logoutBtn.setText("Logout");
-        logoutBtn.setVisible(true);
-        logoutBtn.setAlignment(Pos.CENTER);
-        logoutBtn.setOnAction((ActionEvent event) -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, User.getUsername() + ", you have been successfully logged out.", ButtonType.OK);
-            alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-                // Open up Login GUI
-                try {
-                    User.logout();
-                    new Login().show();
-                    super.close();
-                } catch(Exception e) { }
-            });
-        });
-        
-        // --> ADD ELEMENTS FOR TOP BOX
-        topLeftBox.getChildren().add(logoImgV);
-        topRightBox.getChildren().addAll(loggedInAsTF, logoutBtn);
-        headerBox.getChildren().addAll(topLeftBox, topMid, topRightBox);
+        /**
+         * Compile Elements
+         */
+        loggedInAs.getChildren().addAll(lblLoggedInAs, lblLoggedInUsername);
+        btnStrip.getChildren().addAll(cbHalls, btnViewPerms, btnLogout);
+        headerLeft.getChildren().add(logoView);
+        headerRight.getChildren().addAll(loggedInAs, btnStrip);
+        headerBox.getChildren().addAll(headerLeft, headerSpacer, headerRight);
     }
     
+    /**
+     * @name    btnLogout_Click
+     * @desc    Handles the Click event for the logout button
+     * @param   event 
+     */
+    private void btnLogout_Click(ActionEvent event) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, User.getUsername() + ", you have been successfully logged out.", ButtonType.OK);
+        alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
+            // Open up Login GUI
+            try {
+                User.logout();
+                new Login().show();
+                super.close();
+            } catch(Exception e) { }
+        });
+    }
+    
+    /**
+     * @name    cbHalls_Changed
+     * @desc    Handles when the ComboBox value changes
+     * @param   cb
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void cbHalls_Changed(ComboBox cb, Object options, Object oldValue, Object newValue) {
+        // Cast Objects to Strings
+        String oldVal = (String)oldValue;
+        String newVal = (String)newValue;
+        
+        // Debug
+        System.out.println("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + cb.getSelectionModel().getSelectedIndex());
+    }
+    
+    /**
+     * @name    buildTable
+     * @desc    Create the Table of the "Browser" GUI
+     */
     private void buildTable() {
+        /**
+         * Declare Elements
+         */
+        TableColumn leaseNumber,
+                hallId,
+                roomNumber,
+                studentName,
+                occupancyStatus,
+                cleaningStatus;
         
-        TableColumn leaseNumber = new TableColumn("Lease Number");
-        TableColumn hallId = new TableColumn("Hall ID");
-        TableColumn roomNumber = new TableColumn("Room Number");
-        TableColumn studentName = new TableColumn("Student Name");
-        TableColumn occupancyStatus = new TableColumn("Occupancy Status");
-        TableColumn cleaningStatus = new TableColumn("Cleaning Status");
+        /**
+         * Initialise Elements
+         */
+        leaseNumber         = new TableColumn("Lease Number");
+        hallId              = new TableColumn("Hall ID");
+        roomNumber          = new TableColumn("Room Number");
+        studentName         = new TableColumn("Student Name");
+        occupancyStatus     = new TableColumn("Occupancy Status");
+        cleaningStatus      = new TableColumn("Cleaning Status");
         
-        // Set Cell Values
+        /**
+         * Set Table Properties
+         */
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
         hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
         roomNumber.setCellValueFactory(new PropertyValueFactory<>("RoomNumber"));
@@ -122,68 +204,103 @@ public class Browser extends GUI {
         cleaningStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatusName"));
         tbl.getItems().setAll(Database.getLeases());
         
+        /**
+         * Compile Elements
+         */
         tbl.getColumns().addAll(leaseNumber, hallId, roomNumber, studentName, occupancyStatus, cleaningStatus);
+        
+        /**
+         * Style Elements
+         */
+        // Reset XY Size
+        _size_xy = 0;
+        
+        // Update Column Widths
+        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
+        for(int i = 0; i < tbl.getColumns().size(); i++) {
+            // Compute Text Size and Set Column Width
+            double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+            
+            // Update XY Size
+            _size_xy += (textWidth + 40);
+        }
     }
     
+    /**
+     * @name    buildContent
+     * @desc    Create, style and build the Content of the "Browser" GUI
+     */
     private void buildContent() {
-        // --> GRID PANE
+        /**
+         * Style Elements
+         */
         middleBox.setId("contentBox");
         middleBox.setFitToWidth(true);
         middleBox.setFitToHeight(true);
         
-        // --> TABLE VIEW
-        //TableView<String> tbl = new TableView<>();
-        //tbl.prefWidthProperty().bind(topBox.widthProperty());
-        //tbl.setMinHeight(700);
+        /**
+         * Build Table
+         */
+        this.buildTable();
         
-        buildTable();
-        
+        /**
+         * Compile Elements
+         */
         middleBox.setContent(tbl);
     }
     
+    /**
+     * @name    buildFooter
+     * @desc    Create, style and build the Footer of the "Browser" GUI
+     */
     private void buildFooter() {
-        // Flow Pane for bottom of GUI
+        /**
+         * Style Elements
+         */
         footerBox.setPadding(new Insets(20, 20, 20, 20));
         footerBox.setMinHeight(175);
         footerBox.setId("actionPane");
         
-        // Add Buttons to our Flow Pane
+        /**
+         * Initialise Elements (temp)
+         */
         for(int x = 0; x < 5; x++) {
             Button _tBtn = new Button();
             _tBtn.setText("Button " + String.valueOf(x + 1));
             _tBtn.setVisible(true);
             _tBtn.getStyleClass().add("button");
+            
+            // Compile Elements
             footerBox.getChildren().add(_tBtn);
         }
     }
     
     public Browser() throws Exception {
+        /**
+         * Debug
+         */
         AccommodationSystem.debug("Loaded '" + this.getClass().getName() + "'");
         
+        /**
+         * Build "Browser" GUI
+         */
+        this.buildHeader();
+        this.buildContent();
+        this.buildFooter();
         
-        buildHeader();
-        buildContent();
-        buildFooter();
-        
-        // Add our GUI Elements (hierarchy)
+        /**
+         * Add our GUI Elements (hierarchy)
+         */
         super.getPane().setTop(headerBox);
         super.getPane().setCenter(middleBox);
         super.getPane().setBottom(footerBox);
         
-        // Resize TableColumn Width
-        int totalLength = 0;
-        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
-        for(int i = 0; i < tbl.getColumns().size(); i++) {
-            String text = tbl.getColumns().get(i).getText();
-            double textWidth = fontMetrics.computeStringWidth(text);
-            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
-            totalLength += (textWidth + 40);
-            System.out.println("Updated Column '" + text + "', " + String.valueOf(i));
-        }
-        
-        // Finalise our GUI
+        /**
+         * Finalise our GUI
+         */
         super.setTitle("UWE Accommodation System");
-        super.setSize(totalLength + 25, totalLength + 25);
+        super.setSize(_size_xy + 25, _size_xy + 25);
         super.finalise(true);
     }
     

@@ -29,7 +29,7 @@ public class Hall {
      * @param   postcode
      * @param   phone 
      */
-    public Hall(int id, int room_count, String name, String address, String postcode, String phone) {
+    public Hall(int id, String name, String address, String postcode, String phone, int room_count) {
         this.id = id;
         this.room_count = room_count;
         this.name = name;

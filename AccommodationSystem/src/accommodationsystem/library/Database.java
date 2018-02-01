@@ -7,6 +7,8 @@ package accommodationsystem.library;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /**
  *
@@ -84,6 +86,58 @@ public class Database {
         return false;
     }
     
+    // ObservableList<String> hallSelectorList = FXCollections.observableArrayList("Option 1", "Option 2", "Option 3");
+    public static List<Hall> getHalls() {        
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return new ArrayList<>();
+        
+        // Initialise Leases List
+        List<Hall> hallList = new ArrayList<>();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            try {
+                String query = "SELECT * FROM `halls`";
+                Statement stmt = Database._conn.createStatement();
+                ResultSet rS = stmt.executeQuery(query);
+
+                while(rS.next()) {
+                    hallList.add(new Hall(rS.getInt("id"), rS.getString("name"), rS.getString("address"), rS.getString("postcode"), rS.getString("phone"), rS.getInt("room_count")));
+                }
+            } catch(SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        
+        return hallList;
+    }
+    
+    public static ObservableList<String> getHallNames(boolean allTag) {      
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return FXCollections.observableArrayList("");
+        
+        // Initialise Leases List
+        ObservableList<String> hallList = FXCollections.observableArrayList();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            // Are we adding the "All" tag?
+            if(allTag)
+                hallList.add("All");
+            
+            // Get Hall Names
+            Database.getHalls().stream().forEach((h) -> {
+                hallList.add(h.getName());
+            });
+        }
+        
+        return hallList;
+    }
+    
     public static List<LeaseData> getLeases() {
         // Check if user is logged in
         if(!User.loggedIn())
@@ -101,8 +155,7 @@ public class Database {
                 ResultSet rS = stmt.executeQuery(query);
 
                 while(rS.next()) {
-                    int leaseId = rS.getInt("lease_id");
-                    leases.add(new LeaseData(rS.getInt("hall_id"), rS.getInt("room_number"), leaseId, rS.getInt("student_id"), rS.getInt("occupied"), rS.getInt("clean_status")));
+                    leases.add(new LeaseData(rS.getInt("hall_id"), rS.getInt("room_number"), rS.getInt("lease_id"), rS.getInt("student_id"), rS.getInt("occupied"), rS.getInt("clean_status")));
                 }
             } catch(SQLException e) {
                 System.out.println(e.getMessage());
