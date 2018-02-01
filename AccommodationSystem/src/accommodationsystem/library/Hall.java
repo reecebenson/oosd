@@ -13,8 +13,9 @@ public class Hall {
      * Variables
      */
     private int id,
-            room_count;
+            roomCount;
     private String name,
+            shortName,
             address,
             postcode,
             phone;
@@ -23,19 +24,21 @@ public class Hall {
      * @name    Hall
      * @desc    Default Constructor
      * @param   id
-     * @param   room_count
+     * @param   roomCount
      * @param   name
+     * @param   shortName
      * @param   address
      * @param   postcode
      * @param   phone 
      */
-    public Hall(int id, String name, String address, String postcode, String phone, int room_count) {
+    public Hall(int id, String name, String shortName, String address, String postcode, String phone, int roomCount) {
         this.id = id;
-        this.room_count = room_count;
         this.name = name;
+        this.shortName = shortName;
         this.address = address;
         this.postcode = postcode;
         this.phone = phone;
+        this.roomCount = roomCount;
     }
 
     public int getId() {
@@ -44,14 +47,6 @@ public class Hall {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getRoom_count() {
-        return room_count;
-    }
-
-    public void setRoom_count(int room_count) {
-        this.room_count = room_count;
     }
 
     public String getName() {
@@ -84,5 +79,21 @@ public class Hall {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public int getRoom_count() {
+        return roomCount;
+    }
+
+    public void setRoom_count(int roomCount) {
+        this.roomCount = roomCount;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
     }
 }

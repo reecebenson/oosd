@@ -15,6 +15,23 @@
     -fx-background-color: rgb(55, 62, 74);
 }
 
+.table-cell {
+    -fx-alignment: CENTER;
+}
+
+.hyperlink {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-width: 0px;
+    -fx-border-color: transparent;
+    -fx-text-decoration: none;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: lightgray;
+    -fx-text-decoration: underline;
+}
+
 .combo-box {
     -fx-background-color: #373e4a;
     -fx-border-color: #454a54;

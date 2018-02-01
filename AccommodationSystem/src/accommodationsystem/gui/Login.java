@@ -19,6 +19,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -26,6 +27,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 /**
  *
@@ -71,8 +73,9 @@ public class Login extends GUI {
     /**
      * @name    buildContent
      * @desc    Create, style and build the Content of the "Login" GUI
+     * @param   justLoggedOut
      */
-    private void buildContent() {
+    private void buildContent(boolean justLoggedOut) {
         /**
          * Declare Elements
          */
@@ -83,6 +86,8 @@ public class Login extends GUI {
         PasswordField tfPassword = new PasswordField();
         VBox outerUsername = new VBox();
         VBox outerPassword = new VBox();
+        // Labels
+        Label lblLoggedOut = new Label("You have been successfully logged out!\n\n\n");
         
         /**
          * Style Elements
@@ -111,6 +116,9 @@ public class Login extends GUI {
         btnLogin.setDefaultButton(true);
         btnLogin.setMaxWidth(Double.MAX_VALUE);
         btnLogin.setAlignment(Pos.CENTER);
+        // Just Logged Out Label
+        lblLoggedOut.setTextFill(Color.LIGHTGREEN);
+        lblLoggedOut.setStyle("-fx-font-weight: bold");
         
         /**
          * Configure Elements (Listeners)
@@ -131,8 +139,9 @@ public class Login extends GUI {
          */
         outerUsername.getChildren().add(tfUsername);
         outerPassword.getChildren().add(tfPassword);
-        loginBox.add(outerUsername, 1, 0);
-        loginBox.add(outerPassword, 1, 1);
+        if(justLoggedOut) loginBox.add(lblLoggedOut, 1, 0);
+        loginBox.add(outerUsername, 1, 1);
+        loginBox.add(outerPassword, 1, 2);
         loginBox.add(btnLogin, 1, 3);
     }
     
@@ -206,9 +215,10 @@ public class Login extends GUI {
     /**
      * @name    Default Constructor
      * @desc    Initialise the Login GUI
+     * @param   justLoggedOut
      * @throws  Exception 
      */
-    public Login() throws Exception {
+    public Login(boolean justLoggedOut) throws Exception {
         /**
          * Debug
          */
@@ -218,7 +228,7 @@ public class Login extends GUI {
          * Build "Login" GUI
          */
         this.buildHeader();
-        this.buildContent();
+        this.buildContent(justLoggedOut);
         
         /**
          * Add our GUI Elements (hierarchy)

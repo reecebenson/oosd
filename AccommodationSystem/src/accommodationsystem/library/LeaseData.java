@@ -22,6 +22,8 @@ public class LeaseData {
             occupied,
             cleanStatus;
     private Student student;
+    private Hall hall;
+    private Room room;
     
     /**
      * @name    LeaseData
@@ -37,16 +39,20 @@ public class LeaseData {
      * @param   roomNumber
      * @param   leaseId
      * @param   studentId
-     * @param   occupied
-     * @param   cleanStatus
      */
-    public LeaseData(Integer hallId, Integer roomNumber, Integer leaseId, Integer studentId, Integer occupied, Integer cleanStatus) {
+    public LeaseData(Integer hallId, Integer roomNumber, Integer leaseId, Integer studentId) {
+        // Populate LeaseData
         this.hallId = new SimpleIntegerProperty(hallId);
         this.roomNumber = new SimpleIntegerProperty(roomNumber);
         this.leaseId = new SimpleIntegerProperty(leaseId);
         this.studentId = new SimpleIntegerProperty(studentId);
-        this.occupied = new SimpleIntegerProperty(occupied);
-        this.cleanStatus = new SimpleIntegerProperty(cleanStatus);
+        
+        // Populate Student, Hall & CleaningStatus Objects
+        this.student = Database.getStudentFromId(studentId);
+        this.hall = Database.getHall(hallId);
+        this.room = Database.getRoom(hallId, roomNumber);
+        this.occupied = new SimpleIntegerProperty(this.room.getOccupied());
+        this.cleanStatus = new SimpleIntegerProperty(this.room.getCleanStatus());
     }
     
     /**
@@ -56,6 +62,24 @@ public class LeaseData {
      */
     public Integer getHallId() {
         return hallId.getValue();
+    }
+    
+    /**
+     * @name    getHallName
+     * @desc    Retrieve Hall Name
+     * @return  String
+     */
+    public String getHallName() {
+        return this.hall.getName();
+    }
+    
+    /**
+     * @name    getHallNameAndNumber
+     * @desc    Retrieve Hall Name and Number
+     * @return  String
+     */
+    public String getHallNameAndNumber() {
+        return this.hall.getName() + " - #" + this.hall.getId();
     }
 
     /**
@@ -118,12 +142,6 @@ public class LeaseData {
      * @return  String
      */
     public String getStudentName() {
-        // Null Check
-        if(this.getStudentId() == null)
-            return "";
-        
-        // Get Student
-        this.student = Database.getStudentFromId(this.getStudentId());
         return (this.student != null ? (this.student.getFirstName() + " " + this.student.getLastName()) : "");
     }
 

@@ -89,7 +89,6 @@ public class Database {
         return false;
     }
     
-    // ObservableList<String> hallSelectorList = FXCollections.observableArrayList("Option 1", "Option 2", "Option 3");
     public static List<Hall> getHalls() {        
         // Check if user is logged in
         if(!User.loggedIn())
@@ -111,7 +110,7 @@ public class Database {
                 resultSet = pureStatement.executeQuery(query);
 
                 while(resultSet.next()) {
-                    hallList.add(new Hall(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("address"), resultSet.getString("postcode"), resultSet.getString("phone"), resultSet.getInt("room_count")));
+                    hallList.add(new Hall(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("short_name"), resultSet.getString("address"), resultSet.getString("postcode"), resultSet.getString("phone"), resultSet.getInt("room_count")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -124,6 +123,24 @@ public class Database {
         }
         
         return hallList;
+    }
+    
+    public static Hall getHall(int hallId) {
+        for(Hall h: Database.getHalls()) {
+            if(h.getId() == hallId)
+                return h;
+        }
+        return null;
+    }
+    
+    public static Hall getHall(String name) {
+        for(Hall h: Database.getHalls()) {
+            if(h.getName().toLowerCase().equals(name.toLowerCase()))
+                return h;
+            else if(h.getShortName().toLowerCase().equals(name.toLowerCase()))
+                return h;
+        }
+        return null;
     }
     
     public static ObservableList<String> getHallNames(boolean allTag) {      
@@ -148,6 +165,50 @@ public class Database {
         }
         
         return hallList;
+    }
+    
+    public static List<Room> getRooms() {        
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return new ArrayList<>();
+        
+        // Initialise Leases List
+        List<Room> roomList = new ArrayList<>();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            // Query Variables
+            Statement pureStatement = null;
+            ResultSet resultSet = null;
+            
+            try {
+                String query = "SELECT * FROM `rooms`";
+                pureStatement = Database._conn.createStatement();
+                resultSet = pureStatement.executeQuery(query);
+
+                while(resultSet.next()) {
+                    roomList.add(new Room(resultSet.getInt("room_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
+                }
+            } catch(SQLException e) {
+                AccommodationSystem.debug(e.getMessage());
+            } finally {
+                try {
+                    if(pureStatement != null) pureStatement.close();
+                    if(resultSet != null) resultSet.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return roomList;
+    }
+    
+    public static Room getRoom(int hallId, int roomId) {
+        for(Room r: Database.getRooms()) {
+            if(r.getHallId() == hallId && r.getRoomId() == roomId)
+                return r;
+        }
+        return null;
     }
     
     public static List<LeaseData> getLeases(int hallNumber) {
@@ -180,7 +241,7 @@ public class Database {
                 }
 
                 while(resultSet.next()) {
-                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("room_number"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());

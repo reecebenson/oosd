@@ -37,6 +37,24 @@ public class GUI {
     }
     
     /**
+     * @name    getStage
+     * @desc    Returns the Stage
+     * @return  Stage
+     */
+    public Stage getStage() {
+        return this._stage;
+    }
+    
+    /**
+     * @name    hasFinalised
+     * @desc    Returns whether or not the GUI has been finalised
+     * @return  boolean
+     */
+    public boolean hasFinalised() {
+        return this._hasFinalised;
+    }
+    
+    /**
      * @name    setTitle
      * @desc    Sets the title of the Stage
      * 
@@ -130,7 +148,7 @@ public class GUI {
      */
     public void show() throws Exception {
         // Check that we have finalised our GUI
-        if(!this._hasFinalised)
+        if(!this.hasFinalised())
             throw new Exception("GUI has not yet been finalised and has tried to be shown [" + this.getClass().getName() + "]");
         
         // Show our GUI
@@ -144,7 +162,7 @@ public class GUI {
      * @throws  Exception
      */
     public void hide() throws Exception {
-        if(!this._hasFinalised)
+        if(!this.hasFinalised())
             throw new Exception("GUI has not yet been initialised.");
         
         // Hide our GUI
@@ -158,7 +176,7 @@ public class GUI {
      * @throws  Exception
      */
     public void close() throws Exception {
-        if(!this._hasFinalised)
+        if(!this.hasFinalised())
             throw new Exception("GUI has not yet been initialised.");
         
         // Close our GUI

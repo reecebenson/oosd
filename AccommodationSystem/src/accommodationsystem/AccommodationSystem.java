@@ -20,7 +20,7 @@ public class AccommodationSystem extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Show our Login GUI
-        new Login().show();
+        new Login(false).show();
     }
 
     /**

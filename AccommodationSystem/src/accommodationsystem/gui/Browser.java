@@ -19,7 +19,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -71,14 +73,16 @@ public class Browser extends GUI {
         FlowPane btnStrip = new FlowPane(Orientation.HORIZONTAL, 10, 10);
         // Buttons
         ComboBox cbHalls;
-        Button btnViewPerms = new Button();
+        Button btnAdminPanel = new Button();
         Button btnLogout = new Button();
         // Images
         Image logo = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png"));
         ImageView logoView = new ImageView(logo);
         // Text
         TextFlow loggedInAs = new TextFlow();
-        Text lblLoggedInAs, lblLoggedInUsername;
+        Text lblLoggedInAs, lblLoggedInUsername, lblSpacer;
+        // Hyperlinks
+        Hyperlink lblViewPermissions = new Hyperlink();
         
         /**
          * Style Elements
@@ -88,7 +92,7 @@ public class Browser extends GUI {
         headerBox.setId("topBox");
         headerLeft.setAlignment(Pos.CENTER_LEFT);
         headerRight.setAlignment(Pos.TOP_RIGHT);
-        headerSpacer.setPrefWidth(100);
+        headerSpacer.setPrefWidth(50);
         HBox.setHgrow(headerSpacer, Priority.ALWAYS);
         btnStrip.setAlignment(Pos.TOP_RIGHT);
         // Logo
@@ -100,9 +104,14 @@ public class Browser extends GUI {
         lblLoggedInAs = new Text("Logged in as");
         lblLoggedInAs.setFill(Color.WHITE);
         // Logged In Username
-        lblLoggedInUsername = new Text(" " + User.getUsername() + "\n");
+        lblLoggedInUsername = new Text(" " + User.getUsername() + " | ");
         lblLoggedInUsername.setFill(Color.WHITE);
         lblLoggedInUsername.setStyle("-fx-font-weight: bold");
+        // View Permissions
+        lblViewPermissions.setText("View My Permissions");
+        lblViewPermissions.setOnAction((ActionEvent e) -> btnViewPerms_Click(e));
+        // Spacer Label
+        lblSpacer = new Text("\n");
         // Hall Selector
         cbHalls = new ComboBox(Database.getHallNames(true));
         cbHalls.setId("hallSelector");
@@ -111,10 +120,11 @@ public class Browser extends GUI {
         cbHalls.setValue("All");
         cbHalls.setPrefWidth(150.0);
         cbHalls.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> cbHalls_Changed(cbHalls, options, oldValue, newValue));
-        // View Permissions
-        btnViewPerms.getStyleClass().add("button");
-        btnViewPerms.setText("View Permissions");
-        btnViewPerms.setAlignment(Pos.CENTER);
+        // Administrator Panel
+        btnAdminPanel.getStyleClass().add("button");
+        btnAdminPanel.setText("Administrator Panel");
+        btnAdminPanel.setAlignment(Pos.CENTER);
+        btnAdminPanel.setOnAction((ActionEvent e) -> btnAdminPanel_Click(e));
         // Logout Button
         btnLogout.setId("logoutBtn");
         btnLogout.setText("Logout");
@@ -125,11 +135,43 @@ public class Browser extends GUI {
         /**
          * Compile Elements
          */
-        loggedInAs.getChildren().addAll(lblLoggedInAs, lblLoggedInUsername);
-        btnStrip.getChildren().addAll(cbHalls, btnViewPerms, btnLogout);
+        // Logged In As Label
+        loggedInAs.getChildren().addAll(lblLoggedInAs, lblLoggedInUsername, lblViewPermissions, lblSpacer);
+        // Button Strip
+        // ComboBox
+        btnStrip.getChildren().add(cbHalls);
+        if(User.hasPermission("ADMIN_PANEL")) btnStrip.getChildren().add(btnAdminPanel);
+        btnStrip.getChildren().add(btnLogout);
+        // Header Left
         headerLeft.getChildren().add(logoView);
+        // Header Right
         headerRight.getChildren().addAll(loggedInAs, btnStrip);
+        // Header Box
         headerBox.getChildren().addAll(headerLeft, headerSpacer, headerRight);
+    }
+    
+    /**
+     * @name    btnViewPerms_Click
+     * @desc    Handles the Click event for the View Permissions button
+     * @param   event 
+     */
+    private void btnViewPerms_Click(ActionEvent event) {
+        // Open up Administrator Panel GUI
+        try {
+            new ViewPermissions().getStage().showAndWait();
+        } catch(Exception e) { }
+    }
+    
+    /**
+     * @name    btnAdminPanel_Click
+     * @desc    Handles the Click event for the Administrator Panel button
+     * @param   event 
+     */
+    private void btnAdminPanel_Click(ActionEvent event) {
+        // Open up Administrator Panel GUI
+        try {
+            new AdminPanel().getStage().showAndWait();
+        } catch(Exception e) { }
     }
     
     /**
@@ -138,12 +180,12 @@ public class Browser extends GUI {
      * @param   event 
      */
     private void btnLogout_Click(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, User.getUsername() + ", you have been successfully logged out.", ButtonType.OK);
-        alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to logout?", ButtonType.YES, ButtonType.NO);
+        alert.showAndWait().filter(response -> response == ButtonType.YES).ifPresent(response -> {
             // Open up Login GUI
             try {
                 User.logout();
-                new Login().show();
+                new Login(true).show();
                 super.close();
             } catch(Exception e) { }
         });
@@ -180,15 +222,18 @@ public class Browser extends GUI {
     private void buildTable(int hallNumber) {
         /**
          * Clean-up Table
+         * Only call this if the form has previously been finalised
          */
-        tbl.getItems().clear();
-        tbl.getColumns().clear();
+        if(super.hasFinalised()) {
+            tbl.getItems().clear();
+            tbl.getColumns().clear();
+        }
         
         /**
          * Declare Elements
          */
         TableColumn leaseNumber,
-                hallId,
+                hallName,
                 roomNumber,
                 studentName,
                 occupancyStatus,
@@ -197,9 +242,9 @@ public class Browser extends GUI {
         /**
          * Initialise Elements
          */
-        leaseNumber         = new TableColumn("Lease Number");
-        hallId              = new TableColumn("Hall ID");
-        roomNumber          = new TableColumn("Room Number");
+        hallName              = new TableColumn("Hall Name - #");
+        leaseNumber         = new TableColumn("Lease #");
+        roomNumber          = new TableColumn("Room #");
         studentName         = new TableColumn("Student Name");
         occupancyStatus     = new TableColumn("Occupancy Status");
         cleaningStatus      = new TableColumn("Cleaning Status");
@@ -207,8 +252,8 @@ public class Browser extends GUI {
         /**
          * Set Table Properties
          */
+        hallName.setCellValueFactory(new PropertyValueFactory<>("HallNameAndNumber"));
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
-        hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
         roomNumber.setCellValueFactory(new PropertyValueFactory<>("RoomNumber"));
         studentName.setCellValueFactory(new PropertyValueFactory<>("StudentName"));
         occupancyStatus.setCellValueFactory(new PropertyValueFactory<>("OccupiedStatus"));
@@ -218,7 +263,8 @@ public class Browser extends GUI {
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(leaseNumber, hallId, roomNumber, studentName, occupancyStatus, cleaningStatus);
+        tbl.getColumns().addAll(leaseNumber, hallName, roomNumber, studentName, occupancyStatus, cleaningStatus);
+        tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
          * Style Elements
