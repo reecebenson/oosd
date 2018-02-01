@@ -76,7 +76,7 @@ public class Browser extends GUI {
         Button btnViewPerms = new Button();
         Button btnLogout = new Button();
         // Images
-        Image logo = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png")) {};
+        Image logo = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png"));
         ImageView logoView = new ImageView(logo);
         // Text
         TextFlow loggedInAs = new TextFlow();
@@ -276,6 +276,11 @@ public class Browser extends GUI {
         }
     }
     
+    /**
+     * @name    Default Constructor
+     * @desc    Initialise the Browser GUI
+     * @throws  Exception 
+     */
     public Browser() throws Exception {
         /**
          * Debug
