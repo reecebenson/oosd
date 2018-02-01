@@ -10,9 +10,10 @@
 package accommodationsystem.bases;
 
 import accommodationsystem.AccommodationSystem;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Control;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class GUI {
@@ -20,7 +21,7 @@ public class GUI {
      * Variables used for classes that extend this Class
      */
     private     Stage       _stage;
-    private     StackPane   _stack;
+    private     BorderPane  _bpane;
     private     String      _title;
     private     int         _sizeX;
     private     int         _sizeY;
@@ -32,23 +33,7 @@ public class GUI {
      */
     public GUI() {
         this._stage = new Stage();
-        this._stack = new StackPane();
-    }
-    
-    /**
-     * @name    addItem
-     * @desc    Add an item to the Scene
-     * 
-     * @param item
-     * @throws Exception 
-     */
-    public void addItem(Control item) throws Exception {
-        // Verify that our Stack Pane has been initialised
-        if(_stack == null)
-            throw new Exception("Unable to add item to GUI for " + this.getClass().getName());
-        
-        // Add our item to the Stack Pane
-        this._stack.getChildren().add(item);
+        this._bpane = new BorderPane();
     }
     
     /**
@@ -83,15 +68,55 @@ public class GUI {
     }
     
     /**
+     * @name    getPane
+     * @desc    Returns the Border Pane
+     * 
+     * @return  BorderPane
+     */
+    public BorderPane getPane() {
+        return this._bpane;
+    }
+    
+    /**
+     * @name    formId
+     * @desc    Returns the Forms ID
+     * 
+     * @return  String
+     */
+    public String formId() {
+        return null;
+    }
+    
+    /**
      * @name    finalise
      * @desc    Finalises the Scene and Stage
      * 
+     * @param   resizable
+     * 
      * @throws  Exception
      */
-    public void finalise() throws Exception {
+    public void finalise(boolean resizable) throws Exception {
+        // Finalise Border Pane
+        this._bpane.setPadding(new Insets(0, 0, 0, 0));
+        
         // Create our Scene
-        Scene me = new Scene(this._stack, this._sizeX, this._sizeY);
+        Scene me = new Scene(this._bpane, this._sizeX, this._sizeY);
+        
+        // Import Scene CSS
+        try {
+            me.getStylesheets().add(this.getClass().getClassLoader().getResource("accommodationsystem/resources/css/" + this.formId() + ".css").toExternalForm());
+        }
+        catch(Exception x) {
+            System.out.println("Error trying to import CSS file for '" + this.formId() + "'");
+            System.out.println("'accommdationsystem/resources/css/" + this.formId() + ".css' does not exist for this GUI.");
+        }
+        
+        // Modify Scene Flags
+        this._stage.getIcons().add(new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/icon.png")));
         this._stage.setScene(me);
+        this._stage.setResizable(resizable);
+        this._stage.setMinHeight(this._sizeX);
+        this._stage.setMinWidth(this._sizeY);
         
         // Finalise our GUI
         this._hasFinalised = true;
@@ -110,5 +135,33 @@ public class GUI {
         
         // Show our GUI
         this._stage.show();
+    }
+    
+    /**
+     * @name    hide
+     * @desc    Hides the built Stage
+     * 
+     * @throws  Exception
+     */
+    public void hide() throws Exception {
+        if(!this._hasFinalised)
+            throw new Exception("GUI has not yet been initialised.");
+        
+        // Hide our GUI
+        this._stage.hide();
+    }
+    
+    /**
+     * @name    close
+     * @desc    Closes this GUI
+     * 
+     * @throws  Exception
+     */
+    public void close() throws Exception {
+        if(!this._hasFinalised)
+            throw new Exception("GUI has not yet been initialised.");
+        
+        // Close our GUI
+        this._stage.close();
     }
 }

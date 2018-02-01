@@ -9,7 +9,8 @@
  */
 package accommodationsystem;
 
-import accommodationsystem.gui.Main;
+import accommodationsystem.gui.Login;
+import accommodationsystem.library.Database;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
@@ -18,8 +19,8 @@ public class AccommodationSystem extends Application {
     
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // Show our Main GUI
-        new Main().show();
+        // Show our Login GUI
+        new Login().show();
     }
 
     /**
@@ -35,6 +36,11 @@ public class AccommodationSystem extends Application {
         System.out.println("Application created by Reece Benson, Chris Tapply and Jonas Arud");
         System.out.println("Debugging set to " + (AccommodationSystem.debugging ? "ON" : "OFF"));
         System.out.println("-----------------------------------------------------------------");
+        
+        // Connect to Database
+        System.out.println("Connecting to Database...");
+        Database.Connect();
+        
         launch(args);
     }
     
