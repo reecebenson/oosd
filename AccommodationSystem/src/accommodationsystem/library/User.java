@@ -36,7 +36,7 @@ public class User {
         // Retrieve User Permissions
         try {
             User._userperms = Database.getUserPermissions(User._userId);
-        } catch(SQLException e) {
+        } catch(Exception e) {
             AccommodationSystem.debug("Unable to get " + username + "'s Permissions from Database:\n" + e.getMessage());
             User.logout();
         }

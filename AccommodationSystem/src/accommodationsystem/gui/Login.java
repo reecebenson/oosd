@@ -199,7 +199,7 @@ public class Login extends GUI {
                 // Reset Password Field
                 tfPassword.setText("");
             }
-        } catch(SQLException ex) {
+        } catch(Exception ex) {
             Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -58,7 +58,7 @@ public class Database {
         return "";
     }
     
-    public static boolean validateLogin(String username, String password) throws SQLException {
+    public static boolean validateLogin(String username, String password) {
         // Validate Database Connection
         if(!Database.isConnected()) return false;
         
@@ -81,14 +81,16 @@ public class Database {
         } catch(Exception e) {
             AccommodationSystem.debug("Database Error: " + e.getMessage());
         } finally {
-            prepStatement.close();
-            resultSet.close();
+            try {
+                prepStatement.close();
+                resultSet.close();
+            }catch(Exception x) {}
         }
         return false;
     }
     
     // ObservableList<String> hallSelectorList = FXCollections.observableArrayList("Option 1", "Option 2", "Option 3");
-    public static List<Hall> getHalls() throws SQLException {        
+    public static List<Hall> getHalls() {        
         // Check if user is logged in
         if(!User.loggedIn())
             return new ArrayList<>();
@@ -100,29 +102,31 @@ public class Database {
         if(User.hasPermission(Permissions.VIEW_LEASES))
         {
             // Query Variables
-            Statement stmt = null;
-            ResultSet rS = null;
+            Statement pureStatement = null;
+            ResultSet resultSet = null;
             
             try {
                 String query = "SELECT * FROM `halls`";
-                stmt = Database._conn.createStatement();
-                rS = stmt.executeQuery(query);
+                pureStatement = Database._conn.createStatement();
+                resultSet = pureStatement.executeQuery(query);
 
-                while(rS.next()) {
-                    hallList.add(new Hall(rS.getInt("id"), rS.getString("name"), rS.getString("address"), rS.getString("postcode"), rS.getString("phone"), rS.getInt("room_count")));
+                while(resultSet.next()) {
+                    hallList.add(new Hall(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("address"), resultSet.getString("postcode"), resultSet.getString("phone"), resultSet.getInt("room_count")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
-                stmt.close();
-                rS.close();
+                try {
+                    pureStatement.close();
+                    resultSet.close();
+                }catch(Exception x) {}
             }
         }
         
         return hallList;
     }
     
-    public static ObservableList<String> getHallNames(boolean allTag) throws SQLException {      
+    public static ObservableList<String> getHallNames(boolean allTag) {      
         // Check if user is logged in
         if(!User.loggedIn())
             return FXCollections.observableArrayList("");
@@ -146,7 +150,7 @@ public class Database {
         return hallList;
     }
     
-    public static List<LeaseData> getLeases() throws SQLException {
+    public static List<LeaseData> getLeases() {
         // Check if user is logged in
         if(!User.loggedIn())
             return new ArrayList<>();
@@ -158,29 +162,31 @@ public class Database {
         if(User.hasPermission(Permissions.VIEW_LEASES))
         {
             // Query Variables
-            Statement stmt = null;
-            ResultSet rS = null;
+            Statement pureStatement = null;
+            ResultSet resultSet = null;
             
             try {
                 String query = "SELECT * FROM `leases`";
-                stmt = Database._conn.createStatement();
-                rS = stmt.executeQuery(query);
+                pureStatement = Database._conn.createStatement();
+                resultSet = pureStatement.executeQuery(query);
 
-                while(rS.next()) {
-                    leases.add(new LeaseData(rS.getInt("hall_id"), rS.getInt("room_number"), rS.getInt("lease_id"), rS.getInt("student_id"), rS.getInt("occupied"), rS.getInt("clean_status")));
+                while(resultSet.next()) {
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("room_number"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
-                stmt.close();
-                rS.close();
+                try {
+                    pureStatement.close();
+                    resultSet.close();
+                }catch(Exception x) {}
             }
         }
         
         return leases;
     }
     
-    public static Student getStudentFromId(Integer studentId) throws SQLException {
+    public static Student getStudentFromId(Integer studentId) {
         // Check if user is logged in
         if(!User.loggedIn() || studentId == null || studentId == 0)
             return null;
@@ -192,31 +198,33 @@ public class Database {
         if(User.hasPermission(Permissions.VIEW_LEASES))
         {
             // Query Variables
-            PreparedStatement stmt = null;
-            ResultSet rS = null;
+            PreparedStatement pureStatement = null;
+            ResultSet resultSet = null;
             
             try {
                 String query = "SELECT * FROM `students` WHERE `id` = ?";
-                stmt = Database._conn.prepareStatement(query);
-                stmt.setInt(1, studentId);
-                rS = stmt.executeQuery();
+                pureStatement = Database._conn.prepareStatement(query);
+                pureStatement.setInt(1, studentId);
+                resultSet = pureStatement.executeQuery();
 
-                if(rS.next())
-                    student = new Student(studentId, rS.getString("first_name"), rS.getString("last_name"));
+                if(resultSet.next())
+                    student = new Student(studentId, resultSet.getString("first_name"), resultSet.getString("last_name"));
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
             } catch(Exception e) {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
-                stmt.close();
-                rS.close();
+                try {
+                    pureStatement.close();
+                    resultSet.close();
+                }catch(Exception x) {}
             }
         }
         
         return student;
     }
     
-    public static List<String> getUserPermissions(int userId) throws SQLException {
+    public static List<String> getUserPermissions(int userId) {
         // Check if user is logged in
         if(!User.loggedIn())
             return new ArrayList<>();
@@ -242,8 +250,10 @@ public class Database {
         } catch(Exception e) {
             AccommodationSystem.debug("Database Error: " + e.getMessage());
         } finally {
-            prepStatement.close();
-            resultSet.close();
+            try {
+                prepStatement.close();
+                resultSet.close();
+            }catch(Exception x) {}
         }
         
         return userPermissions;
