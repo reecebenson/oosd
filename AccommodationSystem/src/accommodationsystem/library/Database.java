@@ -82,8 +82,8 @@ public class Database {
             AccommodationSystem.debug("Database Error: " + e.getMessage());
         } finally {
             try {
-                prepStatement.close();
-                resultSet.close();
+                if(prepStatement != null) prepStatement.close();
+                if(resultSet != null) resultSet.close();
             }catch(Exception x) {}
         }
         return false;
@@ -117,8 +117,8 @@ public class Database {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
                 try {
-                    pureStatement.close();
-                    resultSet.close();
+                    if(pureStatement != null) pureStatement.close();
+                    if(resultSet != null) resultSet.close();
                 }catch(Exception x) {}
             }
         }
@@ -150,7 +150,7 @@ public class Database {
         return hallList;
     }
     
-    public static List<LeaseData> getLeases() {
+    public static List<LeaseData> getLeases(int hallNumber) {
         // Check if user is logged in
         if(!User.loggedIn())
             return new ArrayList<>();
@@ -163,12 +163,21 @@ public class Database {
         {
             // Query Variables
             Statement pureStatement = null;
+            PreparedStatement prepStatement = null;
             ResultSet resultSet = null;
             
             try {
-                String query = "SELECT * FROM `leases`";
-                pureStatement = Database._conn.createStatement();
-                resultSet = pureStatement.executeQuery(query);
+                // Are we retrieving a specific Hall's leases?
+                if(hallNumber == 0) {
+                    String query = "SELECT * FROM `leases`";
+                    pureStatement = Database._conn.createStatement();
+                    resultSet = pureStatement.executeQuery(query);
+                } else {
+                    String query = "SELECT * FROM `leases` WHERE `hall_id` = ?";
+                    prepStatement = Database._conn.prepareStatement(query);
+                    prepStatement.setInt(1, hallNumber);
+                    resultSet = prepStatement.executeQuery();
+                }
 
                 while(resultSet.next()) {
                     leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("room_number"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
@@ -177,8 +186,9 @@ public class Database {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
                 try {
-                    pureStatement.close();
-                    resultSet.close();
+                    if(pureStatement != null) pureStatement.close();
+                    if(prepStatement != null) prepStatement.close();
+                    if(resultSet != null) resultSet.close();
                 }catch(Exception x) {}
             }
         }
@@ -215,8 +225,8 @@ public class Database {
                 AccommodationSystem.debug(e.getMessage());
             } finally {
                 try {
-                    pureStatement.close();
-                    resultSet.close();
+                    if(pureStatement != null) pureStatement.close();
+                    if(resultSet != null) resultSet.close();
                 }catch(Exception x) {}
             }
         }
@@ -251,8 +261,8 @@ public class Database {
             AccommodationSystem.debug("Database Error: " + e.getMessage());
         } finally {
             try {
-                prepStatement.close();
-                resultSet.close();
+                if(prepStatement != null) prepStatement.close();
+                if(resultSet != null) resultSet.close();
             }catch(Exception x) {}
         }
         

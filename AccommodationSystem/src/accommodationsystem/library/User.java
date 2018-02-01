@@ -5,7 +5,6 @@
 package accommodationsystem.library;
 
 import accommodationsystem.AccommodationSystem;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,6 +13,9 @@ import java.util.List;
  * @author simpl_000
  */
 public class User {
+    /**
+     * Variables
+     */
     private static boolean      _loggedIn = false;
     private static int          _userId = -1;
     private static String       _username = null;

@@ -9,7 +9,6 @@ import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Database;
 import accommodationsystem.library.User;
 import accommodationsystem.library.Permissions;
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.beans.value.ObservableValue;

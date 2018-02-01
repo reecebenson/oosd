@@ -158,19 +158,32 @@ public class Browser extends GUI {
      * @param   newValue 
      */
     private void cbHalls_Changed(ComboBox cb, Object options, Object oldValue, Object newValue) {
-        // Cast Objects to Strings
+        /**
+         * Cast Objects to Strings
+         */
         String oldVal = (String)oldValue;
         String newVal = (String)newValue;
         
         // Debug
         AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + cb.getSelectionModel().getSelectedIndex());
+        
+        /**
+         * Update TableView to match ComboBox value
+         */
+        this.buildTable(cb.getSelectionModel().getSelectedIndex());
     }
     
     /**
      * @name    buildTable
      * @desc    Create the Table of the "Browser" GUI
      */
-    private void buildTable() {
+    private void buildTable(int hallNumber) {
+        /**
+         * Clean-up Table
+         */
+        tbl.getItems().clear();
+        tbl.getColumns().clear();
+        
         /**
          * Declare Elements
          */
@@ -200,7 +213,7 @@ public class Browser extends GUI {
         studentName.setCellValueFactory(new PropertyValueFactory<>("StudentName"));
         occupancyStatus.setCellValueFactory(new PropertyValueFactory<>("OccupiedStatus"));
         cleaningStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatusName"));
-        tbl.getItems().setAll(Database.getLeases());
+        tbl.getItems().setAll(Database.getLeases(hallNumber));
         
         /**
          * Compile Elements
@@ -240,7 +253,7 @@ public class Browser extends GUI {
         /**
          * Build Table
          */
-        this.buildTable();
+        this.buildTable(0);
         
         /**
          * Compile Elements
