@@ -165,7 +165,7 @@ public class Browser extends GUI {
         String newVal = (String)newValue;
         
         // Debug
-        System.out.println("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + cb.getSelectionModel().getSelectedIndex());
+        AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + cb.getSelectionModel().getSelectedIndex());
     }
     
     /**

@@ -148,7 +148,7 @@ public class Login extends GUI {
         // Try/catch due for handling of SQLException
         try {
             // Debug
-            System.out.println("[DEBUG]: Attempting to login with credentials -> [" + tfUsername.getText() + ":" + tfPassword.getText() + "]");
+            AccommodationSystem.debug("Attempting to login with credentials -> [" + tfUsername.getText() + ":" + tfPassword.getText() + "]");
 
             // Variables
             String userName = tfUsername.getText();

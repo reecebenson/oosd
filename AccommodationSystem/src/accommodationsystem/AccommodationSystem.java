@@ -31,14 +31,14 @@ public class AccommodationSystem extends Application {
      */
     public static void main(String[] args) {
         // Print out Initial Debugging Information
-        System.out.println("-----------------------------------------------------------------");
-        System.out.println("Accommodation System Application - loaded!");
-        System.out.println("Application created by Reece Benson, Chris Tapply and Jonas Arud");
-        System.out.println("Debugging set to " + (AccommodationSystem.debugging ? "ON" : "OFF"));
-        System.out.println("-----------------------------------------------------------------");
+        AccommodationSystem.debug("-----------------------------------------------------------------");
+        AccommodationSystem.debug("Accommodation System Application - loaded!");
+        AccommodationSystem.debug("Application created by Reece Benson, Chris Tapply and Jonas Arud");
+        AccommodationSystem.debug("Debugging set to " + (AccommodationSystem.debugging ? "ON" : "OFF"));
+        AccommodationSystem.debug("-----------------------------------------------------------------");
         
         // Connect to Database
-        System.out.println("Connecting to Database...");
+        AccommodationSystem.debug("Connecting to Database...");
         Database.Connect();
         
         launch(args);

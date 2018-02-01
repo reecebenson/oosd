@@ -4,6 +4,7 @@
  */
 package accommodationsystem.library;
 
+import accommodationsystem.AccommodationSystem;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class User {
         try {
             User._userperms = Database.getUserPermissions(User._userId);
         } catch(SQLException e) {
-            System.out.println("Unable to get " + username + "'s Permissions from Database:\n" + e.getMessage());
+            AccommodationSystem.debug("Unable to get " + username + "'s Permissions from Database:\n" + e.getMessage());
             User.logout();
         }
     }
