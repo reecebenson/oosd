@@ -9,7 +9,10 @@ package accommodationsystem.library;
  * @author simpl_000
  */
 public class Permissions {
-    protected final int WARDEN = 1;
-    protected final int MANAGER = 2;
-    protected final int ADMINISTRATOR = 3;
+    public static final int WARDEN = 1;
+    public static final int MANAGER = 2;
+    public static final int ADMINISTRATOR = 3;
+    
+    public static final String LOGIN = "LOGIN";
+    public static final String VIEW_LEASES = "VIEW_LEASES";
 }

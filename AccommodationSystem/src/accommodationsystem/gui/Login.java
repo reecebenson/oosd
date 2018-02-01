@@ -7,10 +7,11 @@ package accommodationsystem.gui;
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.User;
+import accommodationsystem.library.Permissions;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
@@ -104,14 +105,21 @@ public class Login extends GUI {
                 AccommodationSystem.debug("Clicked >> " + event.getSource().toString() + " <<");
                 System.out.println("Logging in with credentials: [" + tfUsername.getText() + ":" + tfPassword.getText() + "]");
                 if(Database.validateLogin(tfUsername.getText(), tfPassword.getText())) {
-                    Alert alert = new Alert(AlertType.INFORMATION, "You have been successfully logged in as '" + tfUsername.getText() + "'");
-                    alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-                        // Open up Main GUI
-                        try {
-                            new Browser().show();
-                            super.close();
-                        } catch(Exception e) { }
-                    });
+                    // Check Login Permissions
+                    if(User.hasPermission(Permissions.LOGIN)) {
+                        Alert alert = new Alert(AlertType.INFORMATION, "You have been successfully logged in as '" + tfUsername.getText() + "'");
+                        alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
+                            // Open up Main GUI
+                            try {
+                                new Browser().show();
+                                super.close();
+                            } catch(Exception e) { }
+                        });
+                    }else{
+                        Alert alert2 = new Alert(AlertType.ERROR, "You do not have permission to Login!");
+                        alert2.show();
+                        tfPassword.setText("");
+                    }
                 } else {
                     Alert alert = new Alert(AlertType.ERROR, "You have entered an incorrect username and/or password.");
                     alert.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {

@@ -7,6 +7,8 @@ package accommodationsystem.gui;
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.User;
+import accommodationsystem.library.LeaseData;
+import accommodationsystem.library.Database;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
 import javafx.event.ActionEvent;
@@ -19,7 +21,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TableColumn.*;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -37,18 +40,21 @@ import javafx.scene.text.TextFlow;
  * @author simpl_000
  */
 public class Browser extends GUI {
-    public Browser() throws Exception {
-        AccommodationSystem.debug("Loaded '" + this.getClass().getName() + "'");
-        
-        // Elements Used for this GUI
-        ScrollPane     gridPane = new ScrollPane();
-        HBox           topBox = new HBox();
-        Image         logoImg = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png")) {};
+    /**
+     * Variables
+     */
+    TableView<LeaseData> tbl = new TableView<>();
+    HBox headerBox = new HBox();
+    ScrollPane middleBox = new ScrollPane();
+    FlowPane footerBox = new FlowPane(Orientation.HORIZONTAL, 15, 15);
+    
+    private void buildHeader() {
+        Image logoImg = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png")) {};
         
         // Configure our Elements
         // --> HORIZ BOX
-        topBox.setPadding(new Insets(25, 25, 25, 25));
-        topBox.setId("topBox");
+        headerBox.setPadding(new Insets(25, 25, 25, 25));
+        headerBox.setId("topBox");
         
         // --> HORIZ BOX DIRECTIONS
         Region topMid = new Region();
@@ -95,33 +101,51 @@ public class Browser extends GUI {
         // --> ADD ELEMENTS FOR TOP BOX
         topLeftBox.getChildren().add(logoImgV);
         topRightBox.getChildren().addAll(loggedInAsTF, logoutBtn);
-        topBox.getChildren().addAll(topLeftBox, topMid, topRightBox);
-        super.getPane().setTop(topBox);
+        headerBox.getChildren().addAll(topLeftBox, topMid, topRightBox);
+    }
+    
+    private void buildTable() {
         
+        TableColumn leaseNumber = new TableColumn("Lease Number");
+        TableColumn hallId = new TableColumn("Hall ID");
+        TableColumn roomNumber = new TableColumn("Room Number");
+        TableColumn studentName = new TableColumn("Student Name");
+        TableColumn occupancyStatus = new TableColumn("Occupancy Status");
+        TableColumn cleaningStatus = new TableColumn("Cleaning Status");
+        
+        // Set Cell Values
+        leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
+        hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
+        roomNumber.setCellValueFactory(new PropertyValueFactory<>("RoomNumber"));
+        studentName.setCellValueFactory(new PropertyValueFactory<>("StudentName"));
+        occupancyStatus.setCellValueFactory(new PropertyValueFactory<>("OccupiedStatus"));
+        cleaningStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatusName"));
+        tbl.getItems().setAll(Database.getLeases());
+        
+        tbl.getColumns().addAll(leaseNumber, hallId, roomNumber, studentName, occupancyStatus, cleaningStatus);
+    }
+    
+    private void buildContent() {
         // --> GRID PANE
-        gridPane.setId("contentBox");
-        gridPane.setFitToWidth(true);
-        gridPane.setFitToHeight(true);
+        middleBox.setId("contentBox");
+        middleBox.setFitToWidth(true);
+        middleBox.setFitToHeight(true);
         
         // --> TABLE VIEW
-        TableView<String> tbl = new TableView<>();
+        //TableView<String> tbl = new TableView<>();
         //tbl.prefWidthProperty().bind(topBox.widthProperty());
         //tbl.setMinHeight(700);
         
-        TableColumn<String,String> leaseNumber = new TableColumn<>("Lease Number");
-        TableColumn<String,String> hallName = new TableColumn<>("Hall Name");
-        TableColumn<String,String> hallNumber = new TableColumn<>("Hall Number");
-        TableColumn<String,String> roomNumber = new TableColumn<>("Room Number");
-        TableColumn<String,String> studentName = new TableColumn<>("Student Name");
-        TableColumn<String,String> occupancyStatus = new TableColumn<>("Occupancy Status");
-        TableColumn<String,String> cleaningStatus = new TableColumn<>("Cleaning Status");
-        tbl.getColumns().addAll(leaseNumber, hallName, hallNumber, roomNumber, studentName, occupancyStatus, cleaningStatus);
+        buildTable();
         
+        middleBox.setContent(tbl);
+    }
+    
+    private void buildFooter() {
         // Flow Pane for bottom of GUI
-        FlowPane actionPane = new FlowPane(Orientation.HORIZONTAL, 15, 15);
-        actionPane.setPadding(new Insets(20, 20, 20, 20));
-        actionPane.setMinHeight(175);
-        actionPane.setId("actionPane");
+        footerBox.setPadding(new Insets(20, 20, 20, 20));
+        footerBox.setMinHeight(175);
+        footerBox.setId("actionPane");
         
         // Add Buttons to our Flow Pane
         for(int x = 0; x < 5; x++) {
@@ -129,13 +153,22 @@ public class Browser extends GUI {
             _tBtn.setText("Button " + String.valueOf(x + 1));
             _tBtn.setVisible(true);
             _tBtn.getStyleClass().add("button");
-            actionPane.getChildren().add(_tBtn);
+            footerBox.getChildren().add(_tBtn);
         }
+    }
+    
+    public Browser() throws Exception {
+        AccommodationSystem.debug("Loaded '" + this.getClass().getName() + "'");
+        
+        
+        buildHeader();
+        buildContent();
+        buildFooter();
         
         // Add our GUI Elements (hierarchy)
-        gridPane.setContent(tbl);
-        super.getPane().setCenter(gridPane);
-        super.getPane().setBottom(actionPane);
+        super.getPane().setTop(headerBox);
+        super.getPane().setCenter(middleBox);
+        super.getPane().setBottom(footerBox);
         
         // Resize TableColumn Width
         int totalLength = 0;
@@ -143,16 +176,15 @@ public class Browser extends GUI {
         for(int i = 0; i < tbl.getColumns().size(); i++) {
             String text = tbl.getColumns().get(i).getText();
             double textWidth = fontMetrics.computeStringWidth(text);
-            tbl.getColumns().get(i).setPrefWidth(textWidth + 30);
-            totalLength += (textWidth + 30);
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+            totalLength += (textWidth + 40);
             System.out.println("Updated Column '" + text + "', " + String.valueOf(i));
         }
         
         // Finalise our GUI
         super.setTitle("UWE Accommodation System");
-        super.setSize(totalLength + 25, 600);
+        super.setSize(totalLength + 25, totalLength + 25);
         super.finalise(true);
-        
     }
     
     @Override

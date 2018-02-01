@@ -13,6 +13,9 @@ import java.util.List;
  * @author simpl_000
  */
 public class Database {
+    /**
+     * Variables
+     */
     private static Connection _conn;
     
     public static boolean isConnected() {
@@ -48,6 +51,10 @@ public class Database {
         }
     }
     
+    public String encryptString(String text) {
+        return "";
+    }
+    
     public static boolean validateLogin(String username, String password) throws SQLException {
         // Validate Database Connection
         if(!Database.isConnected()) return false;
@@ -77,12 +84,67 @@ public class Database {
         return false;
     }
     
-    public static List<String> getUserPermissions(int userId) throws SQLException {
-        // User Check
-        if(!User.loggedIn()) {
-            System.out.println("User is not logged in!");
+    public static List<LeaseData> getLeases() {
+        // Check if user is logged in
+        if(!User.loggedIn())
             return new ArrayList<>();
+        
+        // Initialise Leases List
+        List<LeaseData> leases = new ArrayList<>();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            try {
+                String query = "SELECT * FROM `leases`";
+                Statement stmt = Database._conn.createStatement();
+                ResultSet rS = stmt.executeQuery(query);
+
+                while(rS.next()) {
+                    int leaseId = rS.getInt("lease_id");
+                    leases.add(new LeaseData(rS.getInt("hall_id"), rS.getInt("room_number"), leaseId, rS.getInt("student_id"), rS.getInt("occupied"), rS.getInt("clean_status")));
+                }
+            } catch(SQLException e) {
+                System.out.println(e.getMessage());
+            }
         }
+        
+        return leases;
+    }
+    
+    public static Student getStudentFromId(Integer studentId) {
+        // Check if user is logged in
+        if(!User.loggedIn() || studentId == null || studentId == 0)
+            return null;
+        
+        // Initialise Leases List
+        Student student = null;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            try {
+                String query = "SELECT * FROM `students` WHERE `id` = ?";
+                PreparedStatement stmt = Database._conn.prepareStatement(query);
+                stmt.setInt(1, studentId);
+                ResultSet rS = stmt.executeQuery();
+
+                if(rS.next())
+                    student = new Student(studentId, rS.getString("first_name"), rS.getString("last_name"));
+            } catch(SQLException e) {
+                System.out.println(e.getMessage());
+            } catch(Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+        
+        return student;
+    }
+    
+    public static List<String> getUserPermissions(int userId) throws SQLException {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return new ArrayList<>();
         
         // Get User Permissions
         List<String> userPermissions = new ArrayList<>();
