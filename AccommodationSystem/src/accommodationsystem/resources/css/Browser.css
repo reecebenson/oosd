@@ -70,6 +70,11 @@
     -fx-border-color: #373e4a;
 }
 
+.button:pressed {
+    -fx-background-color: #5a606d;
+    -fx-border-color: #373e4a;
+}
+
 #lblUsername, #lblPassword {
     -fx-text-fill: white;
 }

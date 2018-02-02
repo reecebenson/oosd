@@ -22,6 +22,11 @@
     -fx-border-color: #373e4a;
 }
 
+#loginBtn:pressed {
+    -fx-background-color: #5a606d;
+    -fx-border-color: #373e4a;
+}
+
 #tfUsername:focused, #tfPassword:focused {
     -fx-background-color: #454a54;
 }

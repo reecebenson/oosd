@@ -11,9 +11,9 @@ import javafx.beans.property.StringProperty;
  *
  * @author Reece
  */
-public class Row {
-    private StringProperty permission;
-    public Row(String perm) {
+public class SingleStringRow {
+    private final StringProperty permission;
+    public SingleStringRow(String perm) {
         this.permission = new SimpleStringProperty(perm);
     }
 

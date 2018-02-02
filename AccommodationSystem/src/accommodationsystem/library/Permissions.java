@@ -15,4 +15,5 @@ public class Permissions {
     
     public static final String LOGIN = "LOGIN";
     public static final String VIEW_LEASES = "VIEW_LEASES";
+    public static final String ADMIN_PANEL = "ADMIN_PANEL";
 }

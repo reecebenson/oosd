@@ -6,18 +6,33 @@ package accommodationsystem.gui;
 
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
+import accommodationsystem.library.Database;
+import accommodationsystem.library.Table.HallRow;
+import accommodationsystem.library.Table.RoomRow;
+import accommodationsystem.library.Table.StudentRow;
+import accommodationsystem.library.Table.UserRow;
+import com.sun.javafx.tk.FontMetrics;
+import com.sun.javafx.tk.Toolkit;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
 
 /**
  *
@@ -32,7 +47,7 @@ public class AdminPanel extends GUI {
     ScrollPane contentOuterBox = new ScrollPane();
     TabPane contentBox = new TabPane();
     // Tabs
-    Tab mainTab, userTab, hallsTab, roomsTab, studentsTab, permissionsTab;
+    Tab mainTab, userTab, hallsTab, roomsTab, studentsTab;
     
     /**
      * @name    buildHeader
@@ -83,10 +98,11 @@ public class AdminPanel extends GUI {
         // Content
         tContent.setPadding(new Insets(20, 20, 20, 20));
         tContent.getStyleClass().add("dark-bg-content");
-        tCenter.setStyle("-fx-background-color: black");
+        tBottomBtnStrip.setPadding(new Insets(20, 20, 20, 20));
         // Buttons
         updateButton.setText("Update");
         // Anchors
+        tBottomBtnStrip.setAlignment(Pos.CENTER);
         AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
         AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
         
@@ -109,21 +125,71 @@ public class AdminPanel extends GUI {
          * Declare and Initialise Elements
          */
         BorderPane tContent = new BorderPane();
-        GridPane tCenter = new GridPane();
+        ScrollPane tCenter = new ScrollPane();
         AnchorPane tBottom = new AnchorPane();
-        Button testButton = new Button();
+        Button createButton = new Button();
+        Button editButton = new Button();
+        Button deleteButton = new Button();
+        FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
+        TableView<UserRow> tbl = new TableView<>();
+        TableColumn userId = new TableColumn("ID");
+        TableColumn userName = new TableColumn("Username");
+        TableColumn userPass = new TableColumn("Password");
+        TableColumn userRank = new TableColumn("Rank");
         
         /**
          * Style Elements
          */
-        tContent.setPadding(new Insets(20, 20, 20, 20));
+        // Content
         tContent.getStyleClass().add("dark-bg-content");
-        testButton.setText("Test!");
+        tBottomBtnStrip.setPadding(new Insets(20, 20, 20, 20));
+        tCenter.setFitToWidth(true);
+        tCenter.setFitToHeight(true);
+        // Buttons
+        createButton.setText("Create User");
+        editButton.setText("Edit User");
+        deleteButton.setText("Delete User");
+        // Anchors
+        tBottomBtnStrip.setAlignment(Pos.CENTER);
+        AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
+        AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
+        
+        /**
+         * Set Table Properties
+         */
+        ObservableList<UserRow> users = FXCollections.observableArrayList();
+        Database.getUsersAsRow().stream().forEach((user) -> {
+            users.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getRank()));
+        });
+        userId.setCellValueFactory(new PropertyValueFactory<>("Id"));
+        userName.setCellValueFactory(new PropertyValueFactory<>("Username"));
+        userPass.setCellValueFactory(new PropertyValueFactory<>("Password"));
+        userRank.setCellValueFactory(new PropertyValueFactory<>("Rank"));
+        tbl.setItems(users);
         
         /**
          * Compile Elements
          */
-        tCenter.add(testButton, 0, 0);
+        tbl.getColumns().addAll(userId, userName, userPass, userRank);
+        tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
+        
+        /**
+         * Style Elements
+         */
+        // Update Column Widths
+        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
+        for(int i = 0; i < tbl.getColumns().size(); i++) {
+            // Compute Text Size and Set Column Width
+            double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+        }
+        
+        /**
+         * Compile Elements
+         */
+        tCenter.setContent(tbl);
+        tBottomBtnStrip.getChildren().addAll(createButton, editButton, deleteButton);
+        tBottom.getChildren().addAll(tBottomBtnStrip);
         tContent.setCenter(tCenter);
         tContent.setBottom(tBottom);
         userTab.setContent(tContent);
@@ -138,21 +204,77 @@ public class AdminPanel extends GUI {
          * Declare and Initialise Elements
          */
         BorderPane tContent = new BorderPane();
-        GridPane tCenter = new GridPane();
+        ScrollPane tCenter = new ScrollPane();
         AnchorPane tBottom = new AnchorPane();
-        Button testButton = new Button();
+        Button createButton = new Button();
+        Button editButton = new Button();
+        Button deleteButton = new Button();
+        FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
+        TableView<HallRow> tbl = new TableView<>();
+        TableColumn hallId = new TableColumn("ID");
+        TableColumn hallName = new TableColumn("Name");
+        TableColumn hallShortName = new TableColumn("Short Name");
+        TableColumn hallAddress = new TableColumn("Address");
+        TableColumn hallPostcode = new TableColumn("Post Code");
+        TableColumn hallPhone = new TableColumn("Phone");
+        TableColumn hallRoomCount = new TableColumn("Room Count");
         
         /**
          * Style Elements
          */
-        tContent.setPadding(new Insets(20, 20, 20, 20));
+        // Content
         tContent.getStyleClass().add("dark-bg-content");
-        testButton.setText("Test!");
+        tBottomBtnStrip.setPadding(new Insets(20, 20, 20, 20));
+        tCenter.setFitToWidth(true);
+        tCenter.setFitToHeight(true);
+        // Buttons
+        createButton.setText("Create Hall");
+        editButton.setText("Edit Hall");
+        deleteButton.setText("Delete Hall");
+        // Anchors
+        tBottomBtnStrip.setAlignment(Pos.CENTER);
+        AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
+        AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
+        
+        /**
+         * Set Table Properties
+         */
+        ObservableList<HallRow> halls = FXCollections.observableArrayList();
+        Database.getHallsAsRow().stream().forEach((h) -> {
+            halls.add(new HallRow(h.getHallId(), h.getHallName(), h.getHallShortName(), h.getHallAddress(), h.getHallPostcode(), h.getHallPhone(), h.getHallRoomCount()));
+        });
+        hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
+        hallName.setCellValueFactory(new PropertyValueFactory<>("HallName"));
+        hallShortName.setCellValueFactory(new PropertyValueFactory<>("HallShortName"));
+        hallAddress.setCellValueFactory(new PropertyValueFactory<>("HallAddress"));
+        hallPostcode.setCellValueFactory(new PropertyValueFactory<>("HallPostcode"));
+        hallPhone.setCellValueFactory(new PropertyValueFactory<>("HallPhone"));
+        hallRoomCount.setCellValueFactory(new PropertyValueFactory<>("HallRoomCount"));
+        tbl.setItems(halls);
         
         /**
          * Compile Elements
          */
-        tCenter.add(testButton, 0, 0);
+        tbl.getColumns().addAll(hallId, hallName, hallShortName, hallAddress, hallPostcode, hallPhone, hallRoomCount);
+        tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
+        
+        /**
+         * Style Elements
+         */
+        // Update Column Widths
+        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
+        for(int i = 0; i < tbl.getColumns().size(); i++) {
+            // Compute Text Size and Set Column Width
+            double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+        }
+        
+        /**
+         * Compile Elements
+         */
+        tCenter.setContent(tbl);
+        tBottomBtnStrip.getChildren().addAll(createButton, editButton, deleteButton);
+        tBottom.getChildren().addAll(tBottomBtnStrip);
         tContent.setCenter(tCenter);
         tContent.setBottom(tBottom);
         hallsTab.setContent(tContent);
@@ -167,21 +289,71 @@ public class AdminPanel extends GUI {
          * Declare and Initialise Elements
          */
         BorderPane tContent = new BorderPane();
-        GridPane tCenter = new GridPane();
+        ScrollPane tCenter = new ScrollPane();
         AnchorPane tBottom = new AnchorPane();
-        Button testButton = new Button();
+        Button createButton = new Button();
+        Button editButton = new Button();
+        Button deleteButton = new Button();
+        FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
+        TableView<RoomRow> tbl = new TableView<>();
+        TableColumn roomId = new TableColumn("Room ID");
+        TableColumn hallId = new TableColumn("Hall ID");
+        TableColumn occupied = new TableColumn("Occupancy Status");
+        TableColumn cleanStatus = new TableColumn("Clean Status");
         
         /**
          * Style Elements
          */
-        tContent.setPadding(new Insets(20, 20, 20, 20));
+        // Content
         tContent.getStyleClass().add("dark-bg-content");
-        testButton.setText("Test!");
+        tBottomBtnStrip.setPadding(new Insets(20, 20, 20, 20));
+        tCenter.setFitToWidth(true);
+        tCenter.setFitToHeight(true);
+        // Buttons
+        createButton.setText("Create Room");
+        editButton.setText("Edit Room");
+        deleteButton.setText("Delete Room");
+        // Anchors
+        tBottomBtnStrip.setAlignment(Pos.CENTER);
+        AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
+        AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
+        
+        /**
+         * Set Table Properties
+         */
+        ObservableList<RoomRow> rooms = FXCollections.observableArrayList();
+        Database.getRoomsAsRow().stream().forEach((r) -> {
+            rooms.add(new RoomRow(r.getRoomId(), r.getHallId(), r.getOccupied(), r.getCleanStatus()));
+        });
+        roomId.setCellValueFactory(new PropertyValueFactory<>("RoomId"));
+        hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
+        occupied.setCellValueFactory(new PropertyValueFactory<>("Occupied"));
+        cleanStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatus"));
+        tbl.setItems(rooms);
         
         /**
          * Compile Elements
          */
-        tCenter.add(testButton, 0, 0);
+        tbl.getColumns().addAll(roomId, hallId, occupied, cleanStatus);
+        tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
+        
+        /**
+         * Style Elements
+         */
+        // Update Column Widths
+        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
+        for(int i = 0; i < tbl.getColumns().size(); i++) {
+            // Compute Text Size and Set Column Width
+            double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+        }
+        
+        /**
+         * Compile Elements
+         */
+        tCenter.setContent(tbl);
+        tBottomBtnStrip.getChildren().addAll(createButton, editButton, deleteButton);
+        tBottom.getChildren().addAll(tBottomBtnStrip);
         tContent.setCenter(tCenter);
         tContent.setBottom(tBottom);
         roomsTab.setContent(tContent);
@@ -196,53 +368,72 @@ public class AdminPanel extends GUI {
          * Declare and Initialise Elements
          */
         BorderPane tContent = new BorderPane();
-        GridPane tCenter = new GridPane();
+        ScrollPane tCenter = new ScrollPane();
         AnchorPane tBottom = new AnchorPane();
-        Button testButton = new Button();
+        Button createButton = new Button();
+        Button editButton = new Button();
+        Button deleteButton = new Button();
+        FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
+        TableView<StudentRow> tbl = new TableView<>();
+        TableColumn studentId = new TableColumn("ID");
+        TableColumn studentFName = new TableColumn("First Name");
+        TableColumn studentLName = new TableColumn("Last Name");
         
         /**
          * Style Elements
          */
-        tContent.setPadding(new Insets(20, 20, 20, 20));
+        // Content
         tContent.getStyleClass().add("dark-bg-content");
-        testButton.setText("Test!");
+        tBottomBtnStrip.setPadding(new Insets(20, 20, 20, 20));
+        tCenter.setFitToWidth(true);
+        tCenter.setFitToHeight(true);
+        // Buttons
+        createButton.setText("Create Student");
+        editButton.setText("Edit Student");
+        deleteButton.setText("Delete Student");
+        // Anchors
+        tBottomBtnStrip.setAlignment(Pos.CENTER);
+        AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
+        AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
+        
+        /**
+         * Set Table Properties
+         */
+        ObservableList<StudentRow> students = FXCollections.observableArrayList();
+        Database.getStudentsAsRow().stream().forEach((student) -> {
+            students.add(new StudentRow(student.getId(), student.getFirstName(), student.getLastName()));
+        });
+        studentId.setCellValueFactory(new PropertyValueFactory<>("Id"));
+        studentFName.setCellValueFactory(new PropertyValueFactory<>("FirstName"));
+        studentLName.setCellValueFactory(new PropertyValueFactory<>("LastName"));
+        tbl.setItems(students);
         
         /**
          * Compile Elements
          */
-        tCenter.add(testButton, 0, 0);
+        tbl.getColumns().addAll(studentId, studentFName, studentLName);
+        tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
+        
+        /**
+         * Style Elements
+         */
+        // Update Column Widths
+        FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
+        for(int i = 0; i < tbl.getColumns().size(); i++) {
+            // Compute Text Size and Set Column Width
+            double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+        }
+        
+        /**
+         * Compile Elements
+         */
+        tCenter.setContent(tbl);
+        tBottomBtnStrip.getChildren().addAll(createButton, editButton, deleteButton);
+        tBottom.getChildren().addAll(tBottomBtnStrip);
         tContent.setCenter(tCenter);
         tContent.setBottom(tBottom);
         studentsTab.setContent(tContent);
-    }
-    
-    /**
-     * @name    buildPermissionsTab
-     * @desc    Builds the "Permissions" tab
-     */
-    private void buildPermissionsTab() {
-        /**
-         * Declare and Initialise Elements
-         */
-        BorderPane tContent = new BorderPane();
-        GridPane tCenter = new GridPane();
-        AnchorPane tBottom = new AnchorPane();
-        Button testButton = new Button();
-        
-        /**
-         * Style Elements
-         */
-        tContent.setPadding(new Insets(20, 20, 20, 20));
-        tContent.getStyleClass().add("dark-bg-content");
-        testButton.setText("Test!");
-        
-        /**
-         * Compile Elements
-         */
-        tCenter.add(testButton, 0, 0);
-        tContent.setCenter(tCenter);
-        tContent.setBottom(tBottom);
-        permissionsTab.setContent(tContent);
     }
     
     /**
@@ -258,7 +449,6 @@ public class AdminPanel extends GUI {
         hallsTab = new Tab();
         roomsTab = new Tab();
         studentsTab = new Tab();
-        permissionsTab = new Tab();
         
         /**
          * Style Elements
@@ -275,7 +465,6 @@ public class AdminPanel extends GUI {
         hallsTab.setText("Halls");
         roomsTab.setText("Rooms");
         studentsTab.setText("Students");
-        permissionsTab.setText("Permissions");
         
         /**
          * Build Tabs
@@ -285,12 +474,11 @@ public class AdminPanel extends GUI {
         this.buildHallsTab();
         this.buildRoomsTab();
         this.buildStudentsTab();
-        this.buildPermissionsTab();
         
         /**
          * Compile Elements
          */
-        contentBox.getTabs().addAll(mainTab, userTab, hallsTab, roomsTab, studentsTab, permissionsTab);
+        contentBox.getTabs().addAll(mainTab, userTab, hallsTab, roomsTab, studentsTab);
         contentOuterBox.setContent(contentBox);
     }
     

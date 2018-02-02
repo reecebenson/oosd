@@ -30,6 +30,11 @@
     -fx-border-color: #373e4a;
 }
 
+.button:pressed {
+    -fx-background-color: #5a606d;
+    -fx-border-color: #373e4a;
+}
+
 .text-field {
     -fx-padding: 6px 12px 6px 12px;
     -fx-border-radius: 3px;
@@ -66,7 +71,7 @@
 }
 
 .label {
-    -fx-text-fill: white;
+    /*-fx-text-fill: white;*/
 }
 
 .tab-pane .tab-header-area .tab-header-background {

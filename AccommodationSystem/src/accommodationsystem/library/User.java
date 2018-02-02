@@ -56,6 +56,10 @@ public class User {
     public static boolean hasPermission(String permission) {
         return User._userperms.contains(permission);
     }
+
+    public static int getUserId() {
+        return _userId;
+    }
     
     public static String getUsername() {
         return User._username;

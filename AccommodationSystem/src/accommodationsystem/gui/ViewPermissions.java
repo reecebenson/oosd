@@ -6,7 +6,7 @@ package accommodationsystem.gui;
 
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
-import accommodationsystem.library.Table.Row;
+import accommodationsystem.library.Table.SingleStringRow;
 import accommodationsystem.library.User;
 import com.sun.javafx.tk.FontMetrics;
 import com.sun.javafx.tk.Toolkit;
@@ -35,7 +35,7 @@ public class ViewPermissions extends GUI {
     HBox headerBox = new HBox();
     ScrollPane contentBox = new ScrollPane();
     // Table
-    TableView<Row> tbl = new TableView<>();
+    TableView<SingleStringRow> tbl = new TableView<>();
     
     /**
      * @name    buildHeader
@@ -89,9 +89,9 @@ public class ViewPermissions extends GUI {
         /**
          * Set Table Properties
          */
-        ObservableList<Row> perm = FXCollections.observableArrayList();
+        ObservableList<SingleStringRow> perm = FXCollections.observableArrayList();
         User.getPermissions().stream().forEach((p) -> {
-            perm.add(new Row(p));
+            perm.add(new SingleStringRow(p));
         });
         permission.setCellValueFactory(new PropertyValueFactory<>("Permission"));
         tbl.setItems(perm);

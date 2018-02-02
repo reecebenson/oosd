@@ -9,6 +9,7 @@ import accommodationsystem.bases.GUI;
 import accommodationsystem.library.User;
 import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
 import javafx.event.ActionEvent;
@@ -140,7 +141,7 @@ public class Browser extends GUI {
         // Button Strip
         // ComboBox
         btnStrip.getChildren().add(cbHalls);
-        if(User.hasPermission("ADMIN_PANEL")) btnStrip.getChildren().add(btnAdminPanel);
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) btnStrip.getChildren().add(btnAdminPanel);
         btnStrip.getChildren().add(btnLogout);
         // Header Left
         headerLeft.getChildren().add(logoView);
