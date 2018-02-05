@@ -10,12 +10,14 @@ package accommodationsystem.library.Lease;
  */
 public class Room {
     private int roomId,
+            flatId,
             hallId,
             occupied,
             cleanStatus;
 
-    public Room(int roomId, int hallId, int occupied, int cleanStatus) {
+    public Room(int roomId, int flatId, int hallId, int occupied, int cleanStatus) {
         this.roomId = roomId;
+        this.flatId = flatId;
         this.hallId = hallId;
         this.occupied = occupied;
         this.cleanStatus = cleanStatus;
@@ -27,6 +29,14 @@ public class Room {
 
     public void setRoomId(int roomId) {
         this.roomId = roomId;
+    }
+
+    public int getFlatId() {
+        return flatId;
+    }
+
+    public void setFlatId(int flatId) {
+        this.flatId = flatId;
     }
 
     public int getHallId() {

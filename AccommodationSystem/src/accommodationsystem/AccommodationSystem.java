@@ -44,14 +44,30 @@ public class AccommodationSystem extends Application {
         launch(args);
     }
     
+    /**
+     * @name    debug
+     * @desc    Used instead of SOUT so that debug output is only displayed when debugging is set to true
+     * 
+     * @param print 
+     */
     public static void debug(String... print) {
         // Check if we're outputting debug information
-        if(!AccommodationSystem.debugging)
+        if(!AccommodationSystem.isDebugging())
             return;
             
         // Loop through the passed arguments and output them
         for(String s: print) {
             System.out.println("[DEBUG]: " + s);
         }
+    }
+    
+    /**
+     * @name    isDebugging
+     * @desc    Returns a boolean to whether the application is debugging or not
+     * 
+     * @return  boolean
+     */
+    public static boolean isDebugging() {
+        return AccommodationSystem.debugging;
     }
 }

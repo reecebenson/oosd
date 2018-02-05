@@ -225,7 +225,7 @@ public class Database {
                 resultSet = pureStatement.executeQuery(query);
 
                 while(resultSet.next()) {
-                    roomList.add(new Room(resultSet.getInt("room_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
+                    roomList.add(new Room(resultSet.getInt("room_id"), resultSet.getInt("flat_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -312,9 +312,9 @@ public class Database {
         return studentList;
     }
     
-    public static Room getRoom(int hallId, int roomId) {
+    public static Room getRoom(int hallId, int flatId, int roomId) {
         for(Room r: Database.getRooms()) {
-            if(r.getHallId() == hallId && r.getRoomId() == roomId)
+            if(r.getHallId() == hallId && r.getFlatId() == flatId && r.getRoomId() == roomId)
                 return r;
         }
         return null;
@@ -386,7 +386,7 @@ public class Database {
                 }
 
                 while(resultSet.next()) {
-                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id")));
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());

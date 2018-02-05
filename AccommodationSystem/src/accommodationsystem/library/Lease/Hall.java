@@ -4,6 +4,13 @@
  */
 package accommodationsystem.library.Lease;
 
+import accommodationsystem.library.Database;
+import accommodationsystem.library.User;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 /**
  *
  * @author simpl_000
@@ -19,6 +26,7 @@ public class Hall {
             address,
             postcode,
             phone;
+    private List<Room> rooms;
 
     /**
      * @name    Hall
@@ -39,38 +47,29 @@ public class Hall {
         this.postcode = postcode;
         this.phone = phone;
         this.roomCount = roomCount;
+        
+        // Get Rooms linked to this Hall
+        this.rooms = new ArrayList<>();
+        for(Room r: Database.getRooms()) {
+            if(r.getHallId() == id)
+                this.rooms.add(r);
+        }
     }
 
     public int getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public String getPostcode() {
         return postcode;
-    }
-
-    public void setPostcode(String postcode) {
-        this.postcode = postcode;
     }
 
     public String getPhone() {
@@ -81,19 +80,32 @@ public class Hall {
         this.phone = phone;
     }
 
-    public int getRoom_count() {
+    public int getRoomCount() {
         return roomCount;
     }
-
-    public void setRoom_count(int roomCount) {
-        this.roomCount = roomCount;
-    }
-
     public String getShortName() {
         return shortName;
     }
 
-    public void setShortName(String shortName) {
-        this.shortName = shortName;
+    public List<Room> getRooms() {
+        return rooms;
+    }
+    
+    public ObservableList<Integer> getFlatsAsCollection() {
+        ObservableList<Integer> flatsCollection = FXCollections.observableArrayList();
+        for(Room r: this.getRooms()) {
+            if(!flatsCollection.contains(r.getFlatId()))
+                flatsCollection.add(r.getFlatId());
+        }
+        return flatsCollection;
+    }
+    
+    public ObservableList<Integer> getRoomsAsCollection() {
+        ObservableList<Integer> roomsCollection = FXCollections.observableArrayList();
+        for(Room r: this.getRooms()) {
+            if(!roomsCollection.contains(r.getRoomId()))
+                roomsCollection.add(r.getRoomId());
+        }
+        return roomsCollection;
     }
 }

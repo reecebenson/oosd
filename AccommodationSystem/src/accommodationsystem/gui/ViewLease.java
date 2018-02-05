@@ -8,6 +8,10 @@ package accommodationsystem.gui;
  * TODO:
  * 
  * - Import all available rooms into `rooms` table in database
+ * - When updating Hall Name: Flat ID and Room ID should be set to empty, "Update" button should be disabled
+ * - When updating Flat ID: Room ID should be set to empty, "Update" button should be disabled
+ * - When updating values: check against database for clashes against leases existing for room etc
+ * - When updating values: update values according to database
  */
 
 import accommodationsystem.AccommodationSystem;
@@ -16,6 +20,7 @@ import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Database;
 import accommodationsystem.library.Lease.Occupancy;
 import accommodationsystem.library.LeaseData;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -79,12 +84,12 @@ public class ViewLease extends GUI {
          */
         Button btnUpdate;
         Label lblHallName,
-                lblHallId,
+                lblFlatNumber,
                 lblRoomNumber,
                 lblOccupancy,
                 lblCleanStatus;
         ComboBox hallName,
-                hallId,
+                flatNumber,
                 roomNumber,
                 occupancy,
                 cleanStatus;
@@ -96,14 +101,14 @@ public class ViewLease extends GUI {
         btnUpdate = new Button();
         // Label
         lblHallName = new Label("Hall Name:");
-        lblHallId = new Label("Hall ID:");
+        lblFlatNumber = new Label("Flat Number:");
         lblRoomNumber = new Label("Room Number:");
         lblOccupancy = new Label("Occupancy:");
         lblCleanStatus = new Label("Clean Status");
         // ComboBox
         hallName = new ComboBox(Database.getHallNames(false));
-        hallId = new ComboBox();
-        roomNumber = new ComboBox();
+        flatNumber = new ComboBox(this.leaseData.getHall().getFlatsAsCollection());
+        roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection());
         occupancy = new ComboBox(Occupancy.getOccupancies());
         cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
@@ -116,30 +121,36 @@ public class ViewLease extends GUI {
         contentBox.setVgap(10d);
         contentBox.setHgap(10d);
         contentBox.setId("contentBox");
+        // Labels
+        GridPane.setHalignment(lblHallName, HPos.RIGHT);
+        GridPane.setHalignment(lblFlatNumber, HPos.RIGHT);
+        GridPane.setHalignment(lblRoomNumber, HPos.RIGHT);
+        GridPane.setHalignment(lblOccupancy, HPos.RIGHT);
+        GridPane.setHalignment(lblCleanStatus, HPos.RIGHT);
         // hallName ComboBox
         hallName.setStyle("-fx-text-fill: white");
         hallName.setValue(this.leaseData.getHallName());
-        hallName.setPrefWidth(150.0);
+        hallName.setPrefWidth(225.0);
         hallName.setPadding(new Insets(11, 5, 11, 5));
         // hallNumber ComboBox
-        hallId.setStyle("-fx-text-fill: white");
-        hallId.setValue(this.leaseData.getHallId());
-        hallId.setPrefWidth(150.0);
-        hallId.setPadding(new Insets(11, 5, 11, 5));
+        flatNumber.setStyle("-fx-text-fill: white");
+        flatNumber.setValue(this.leaseData.getFlatNumber());
+        flatNumber.setPrefWidth(225.0);
+        flatNumber.setPadding(new Insets(11, 5, 11, 5));
         // roomNumber ComboBox
         roomNumber.setStyle("-fx-text-fill: white");
         roomNumber.setValue(this.leaseData.getRoomNumber());
-        roomNumber.setPrefWidth(150.0);
+        roomNumber.setPrefWidth(225.0);
         roomNumber.setPadding(new Insets(11, 5, 11, 5));
         // occupancy ComboBox
         occupancy.setStyle("-fx-text-fill: white");
         occupancy.setValue(this.leaseData.getOccupiedStatus());
-        occupancy.setPrefWidth(150.0);
+        occupancy.setPrefWidth(225.0);
         occupancy.setPadding(new Insets(11, 5, 11, 5));
         // cleanStatus ComboBox
         cleanStatus.setStyle("-fx-text-fill: white");
         cleanStatus.setValue(this.leaseData.getCleanStatusName());
-        cleanStatus.setPrefWidth(150.0);
+        cleanStatus.setPrefWidth(225.0);
         cleanStatus.setPadding(new Insets(11, 5, 11, 5));
         // Update Button
         btnUpdate.setText("Update Lease");
@@ -154,8 +165,8 @@ public class ViewLease extends GUI {
         contentBox.add(lblHallName, 0, 0);
         contentBox.add(hallName, 1, 0);
         // Hall ID
-        contentBox.add(lblHallId, 0, 1);
-        contentBox.add(hallId, 1, 1);
+        contentBox.add(lblFlatNumber, 0, 1);
+        contentBox.add(flatNumber, 1, 1);
         // Room Number
         contentBox.add(lblRoomNumber, 0, 2);
         contentBox.add(roomNumber, 1, 2);

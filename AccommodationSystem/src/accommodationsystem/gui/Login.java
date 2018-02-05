@@ -121,6 +121,14 @@ public class Login extends GUI {
         lblLoggedOut.setStyle("-fx-font-weight: bold");
         
         /**
+         * Debugging - Write username/password fields
+         */
+        if(AccommodationSystem.isDebugging()) {
+            tfUsername.setText("admin");
+            tfPassword.setText("1234");
+        }
+        
+        /**
          * Configure Elements (Listeners)
          */
         // Username TextField

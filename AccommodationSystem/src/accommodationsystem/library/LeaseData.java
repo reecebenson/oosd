@@ -19,6 +19,7 @@ public class LeaseData {
      * Variables
      */
     private IntegerProperty hallId,
+            flatNumber,
             roomNumber,
             leaseId,
             studentId,
@@ -39,13 +40,15 @@ public class LeaseData {
      * @desc    Override Constructor
      * 
      * @param   hallId
+     * @param   flatNumber
      * @param   roomNumber
      * @param   leaseId
      * @param   studentId
      */
-    public LeaseData(Integer hallId, Integer roomNumber, Integer leaseId, Integer studentId) {
+    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId) {
         // Populate LeaseData
         this.hallId = new SimpleIntegerProperty(hallId);
+        this.flatNumber = new SimpleIntegerProperty(flatNumber);
         this.roomNumber = new SimpleIntegerProperty(roomNumber);
         this.leaseId = new SimpleIntegerProperty(leaseId);
         this.studentId = new SimpleIntegerProperty(studentId);
@@ -53,7 +56,7 @@ public class LeaseData {
         // Populate Student, Hall & CleaningStatus Objects
         this.student = Database.getStudentFromId(studentId);
         this.hall = Database.getHall(hallId);
-        this.room = Database.getRoom(hallId, roomNumber);
+        this.room = Database.getRoom(hallId, flatNumber, roomNumber);
         this.occupied = new SimpleIntegerProperty(this.room.getOccupied());
         this.cleanStatus = new SimpleIntegerProperty(this.room.getCleanStatus());
     }
@@ -92,6 +95,24 @@ public class LeaseData {
      */
     public void setHallId(IntegerProperty hallId) {
         this.hallId = hallId;
+    }
+
+    /**
+     * @name    getFlatNumber
+     * @desc    Retrieve Flat Number
+     * @return  IntegerProperty
+     */
+    public Integer getFlatNumber() {
+        return flatNumber.intValue();
+    }
+
+    /**
+     * @name    setFlatNumber
+     * @desc    Set Flat Number
+     * @param   flatNumber 
+     */
+    public void setFlatNumber(IntegerProperty flatNumber) {
+        this.flatNumber = flatNumber;
     }
 
     /**
@@ -209,5 +230,32 @@ public class LeaseData {
      */
     public void setCleanStatus(IntegerProperty cleanStatus) {
         this.cleanStatus = cleanStatus;
+    }
+
+    /**
+     * @name    getStudent
+     * @desc    Retrieve Student Class
+     * @return  Student
+     */
+    public Student getStudent() {
+        return student;
+    }
+
+    /**
+     * @name    getHall
+     * @desc    Retrieve Hall Class
+     * @return  Hall
+     */
+    public Hall getHall() {
+        return hall;
+    }
+
+    /**
+     * @name    getRoom
+     * @desc    Retrieve Room Class
+     * @return  Room
+     */
+    public Room getRoom() {
+        return room;
     }
 }

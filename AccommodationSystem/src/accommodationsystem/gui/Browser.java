@@ -236,6 +236,7 @@ public class Browser extends GUI {
          */
         TableColumn leaseNumber,
                 hallName,
+                flatNumber,
                 roomNumber,
                 studentName,
                 occupancyStatus,
@@ -244,8 +245,9 @@ public class Browser extends GUI {
         /**
          * Initialise Elements
          */
-        hallName              = new TableColumn("Hall Name - #");
         leaseNumber         = new TableColumn("Lease #");
+        hallName            = new TableColumn("Hall Name");
+        flatNumber          = new TableColumn("Flat #");
         roomNumber          = new TableColumn("Room #");
         studentName         = new TableColumn("Student Name");
         occupancyStatus     = new TableColumn("Occupancy Status");
@@ -258,8 +260,9 @@ public class Browser extends GUI {
         tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
         tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
         // Cell Value Factory
-        hallName.setCellValueFactory(new PropertyValueFactory<>("HallNameAndNumber"));
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
+        hallName.setCellValueFactory(new PropertyValueFactory<>("HallName"));
+        flatNumber.setCellValueFactory(new PropertyValueFactory<>("FlatNumber"));
         roomNumber.setCellValueFactory(new PropertyValueFactory<>("RoomNumber"));
         studentName.setCellValueFactory(new PropertyValueFactory<>("StudentName"));
         occupancyStatus.setCellValueFactory(new PropertyValueFactory<>("OccupiedStatus"));
@@ -269,7 +272,7 @@ public class Browser extends GUI {
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(leaseNumber, hallName, roomNumber, studentName, occupancyStatus, cleaningStatus);
+        tbl.getColumns().addAll(leaseNumber, hallName, flatNumber, roomNumber, studentName, occupancyStatus, cleaningStatus);
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
@@ -283,10 +286,10 @@ public class Browser extends GUI {
         for(int i = 0; i < tbl.getColumns().size(); i++) {
             // Compute Text Size and Set Column Width
             double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
-            tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
+            tbl.getColumns().get(i).setPrefWidth(textWidth + 60);
             
             // Update XY Size
-            _size_xy += (textWidth + 40);
+            _size_xy += (textWidth + 60);
         }
     }
     
