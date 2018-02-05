@@ -4,6 +4,12 @@
  */
 package accommodationsystem.gui;
 
+/**
+ * TODO:
+ * 
+ * - Import all available rooms into `rooms` table in database
+ */
+
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Lease.CleaningStatus;
