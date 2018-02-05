@@ -26,6 +26,16 @@ public class Occupancy {
         }
     }
     
+    public static int getId(String occupancy) {
+        switch(occupancy) {
+            default:
+            case "Unoccupied":
+                return UNOCCUPIED;
+            case "Occupied":
+                return OCCUPIED;
+        }
+    }
+    
     public static ObservableList<String> getOccupancies() {
         ObservableList<String> statuses = FXCollections.observableArrayList();
         statuses.addAll("Unoccupied", "Occupied");

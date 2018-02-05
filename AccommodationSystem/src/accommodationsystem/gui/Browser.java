@@ -257,8 +257,10 @@ public class Browser extends GUI {
          * Set Table Properties
          */
         // Table Listeners
-        tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
-        tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
+        if(!super.hasFinalised()) {
+            tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
+            tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
+        }
         // Cell Value Factory
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
         hallName.setCellValueFactory(new PropertyValueFactory<>("HallName"));

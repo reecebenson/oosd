@@ -29,6 +29,18 @@ public class CleaningStatus {
         }
     }
     
+    public static int getId(String name) {
+        switch(name) {
+            default:
+            case "Offline":
+                return OFFLINE;
+            case "Clean":
+                return CLEAN;
+            case "Dirty":
+                return DIRTY;
+        }
+    }
+    
     public static ObservableList<String> getStatuses() {
         ObservableList<String> statuses = FXCollections.observableArrayList();
         statuses.addAll("Offline", "Clean", "Dirty");

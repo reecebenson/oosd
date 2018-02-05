@@ -18,8 +18,12 @@ import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Lease.Hall;
 import accommodationsystem.library.Lease.Occupancy;
 import accommodationsystem.library.LeaseData;
+import accommodationsystem.library.Permissions;
+import accommodationsystem.library.User;
+import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -44,6 +48,13 @@ public class ViewLease extends GUI {
     GridPane contentBox = new GridPane();
     // Lease Data
     LeaseData leaseData;
+    // Elements
+    Button btnUpdate;
+    ComboBox hallName,
+            flatNumber,
+            roomNumber,
+            occupancy,
+            cleanStatus;
     
     /**
      * @name    buildHeader
@@ -82,17 +93,11 @@ public class ViewLease extends GUI {
         /**
          * Declare Elements
          */
-        Button btnUpdate;
         Label lblHallName,
                 lblFlatNumber,
                 lblRoomNumber,
                 lblOccupancy,
                 lblCleanStatus;
-        ComboBox hallName,
-                flatNumber,
-                roomNumber,
-                occupancy,
-                cleanStatus;
         
         /**
          * Initialise Elements
@@ -132,16 +137,19 @@ public class ViewLease extends GUI {
         hallName.setValue(this.leaseData.getHallName());
         hallName.setPrefWidth(225.0);
         hallName.setPadding(new Insets(11, 5, 11, 5));
+        hallName.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> hallName_Changed(options, oldValue, newValue));
         // hallNumber ComboBox
         flatNumber.setStyle("-fx-text-fill: white");
         flatNumber.setValue(this.leaseData.getFlatNumber());
         flatNumber.setPrefWidth(225.0);
         flatNumber.setPadding(new Insets(11, 5, 11, 5));
+        flatNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> flatNumber_Changed(options, oldValue, newValue));
         // roomNumber ComboBox
         roomNumber.setStyle("-fx-text-fill: white");
         roomNumber.setValue(this.leaseData.getRoomNumber());
         roomNumber.setPrefWidth(225.0);
         roomNumber.setPadding(new Insets(11, 5, 11, 5));
+        roomNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> roomNumber_Changed(options, oldValue, newValue));
         // occupancy ComboBox
         occupancy.setStyle("-fx-text-fill: white");
         occupancy.setValue(this.leaseData.getOccupiedStatus());
@@ -157,6 +165,21 @@ public class ViewLease extends GUI {
         btnUpdate.setDefaultButton(true);
         btnUpdate.setMaxWidth(Double.MAX_VALUE);
         btnUpdate.setAlignment(Pos.CENTER);
+        btnUpdate.setOnAction((ActionEvent e) -> btnUpdate_Click(e));
+        
+        /**
+         * Style Elements in accordance to Permissions
+         */
+        if(!User.hasPermission(Permissions.EDIT_LEASE)) {
+            hallName.setDisable(true);
+            flatNumber.setDisable(true);
+            roomNumber.setDisable(true);
+        }
+        
+        if(!User.hasPermission(Permissions.EDIT_CLEAN)) {
+            occupancy.setDisable(true);
+            cleanStatus.setDisable(true);
+        }
         
         /**
          * Compile Elements
@@ -180,6 +203,100 @@ public class ViewLease extends GUI {
         contentBox.add(btnUpdate, 1, 5);
     }
     
+    /**
+     * @name    hallName_Changed
+     * @desc    Handles when the ComboBox value changes
+     * 
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void hallName_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check if values are null to avoid errors
+         */
+        if(newValue == null) return;
+        
+        /**
+         * Cast Objects to Strings
+         */
+        String oldVal = (String)oldValue;
+        String newVal = (String)newValue;
+        
+        // Debug
+        AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+        
+        // Disable Update Button
+        btnUpdate.setDisable(true);
+        
+        // Clear items from our other ComboBoxes
+        flatNumber.getItems().clear();
+        roomNumber.getItems().clear();
+        
+        // Set our combo box values to null
+        flatNumber.setValue(null);
+        roomNumber.setValue(null);
+        
+        // Populate ComboBoxes
+        Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
+        flatNumber.setItems(tempHall.getFlatsAsCollection());
+        roomNumber.setItems(tempHall.getRoomsAsCollection());
+        System.out.println("populated halls");
+    }
+    
+    /**
+     * @name    flatNumber_Changed
+     * @desc    Handles when the ComboBox value changes
+     * 
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void flatNumber_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check if values are null to avoid errors
+         */
+        if(newValue == null) return;
+        
+        /**
+         * Cast Objects to Strings
+         */
+        int newVal = (int)newValue;
+        
+        /**
+         * Debug
+         */
+        AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+    }
+    
+    /**
+     * @name    roomNumber_Changed
+     * @desc    Handles when the ComboBox value changes
+     * 
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void roomNumber_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check if values are null to avoid errors
+         */
+        if(newValue == null) return;
+        
+        /**
+         * Cast Objects to Strings
+         */
+        int newVal = (int)newValue;
+        
+        /**
+         * Debug
+         */
+        AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+    }
+    
+    private void btnUpdate_Click(ActionEvent event) {
+        AccommodationSystem.debug("update button pressed!1!11!!1!1!11!!!");
+    }
     
     /**
      * @name    Default Constructor
