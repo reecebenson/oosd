@@ -106,14 +106,12 @@ public class GUI {
     }
     
     /**
-     * @name    finalise
-     * @desc    Finalises the Scene and Stage
+     * @name    build
+     * @desc    Builds the GUI and returns a Scene
      * 
-     * @param   resizable
-     * 
-     * @throws  Exception
+     * @return  Scene
      */
-    public void finalise(boolean resizable) throws Exception {
+    private Scene build(boolean resizable) {
         // Finalise Border Pane
         this._bpane.setPadding(new Insets(0, 0, 0, 0));
         
@@ -136,8 +134,42 @@ public class GUI {
         this._stage.setMinHeight(this._sizeX);
         this._stage.setMinWidth(this._sizeY);
         
+        // Return our Scene
+        return me;
+    }
+    
+    /**
+     * @name    finalise
+     * @desc    Finalises the Scene and Stage
+     * 
+     * @param   resizable
+     * 
+     * @throws  Exception
+     */
+    public void finalise(boolean resizable) throws Exception {
+        // Build our GUI
+        Scene me = this.build(resizable);
+        
         // Finalise our GUI
         this._hasFinalised = true;
+    }
+    
+    /**
+     * @name    finaliseAndGetScene
+     * @desc    Finalises the Scene and Stage, and returns the Scene
+     * 
+     * @param   resizable
+     * 
+     * @throws  Exception
+     * @return  Scene
+     */
+    public Scene finaliseAndGetScene(boolean resizable) throws Exception {
+        // Build our GUI
+        Scene me = this.build(resizable);
+        
+        // Finalise our GUI
+        this._hasFinalised = true;
+        return me;
     }
     
     /**

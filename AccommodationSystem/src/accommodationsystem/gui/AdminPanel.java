@@ -1,7 +1,12 @@
-/*
+/**
  * Reece Benson - Bristol UWE
  * BSc Computer Science
+ *
+ * TODO:
+ * - Disable all buttons until a table item has been selected OR show an Error Alert when users click a button and a TableRow is not selected
+ * - Allow Administrators to create/edit/delete users/rooms/halls/students
  */
+
 package accommodationsystem.gui;
 
 import accommodationsystem.AccommodationSystem;
@@ -136,6 +141,7 @@ public class AdminPanel extends GUI {
         TableColumn userName = new TableColumn("Username");
         TableColumn userPass = new TableColumn("Password");
         TableColumn userRank = new TableColumn("Rank");
+        TableColumn userPerms = new TableColumn("Permissions");
         
         /**
          * Style Elements
@@ -165,16 +171,17 @@ public class AdminPanel extends GUI {
         userName.setCellValueFactory(new PropertyValueFactory<>("Username"));
         userPass.setCellValueFactory(new PropertyValueFactory<>("Password"));
         userRank.setCellValueFactory(new PropertyValueFactory<>("Rank"));
+        userPerms.setCellValueFactory(new PropertyValueFactory<>("Perms"));
         tbl.setItems(users);
         
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(userId, userName, userPass, userRank);
+        tbl.getColumns().addAll(userId, userName, userPass, userRank, userPerms);
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
-         * Style Elements
+         * Style Table Elements
          */
         // Update Column Widths
         FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
@@ -183,6 +190,9 @@ public class AdminPanel extends GUI {
             double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
             tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
         }
+        
+        // Update Permissions Column Width
+        userPerms.setPrefWidth(250);
         
         /**
          * Compile Elements
@@ -259,7 +269,7 @@ public class AdminPanel extends GUI {
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
-         * Style Elements
+         * Style Table Elements
          */
         // Update Column Widths
         FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
@@ -338,7 +348,7 @@ public class AdminPanel extends GUI {
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
-         * Style Elements
+         * Style Table Elements
          */
         // Update Column Widths
         FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));
@@ -415,7 +425,7 @@ public class AdminPanel extends GUI {
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
-         * Style Elements
+         * Style Table Elements
          */
         // Update Column Widths
         FontMetrics fontMetrics = Toolkit.getToolkit().getFontLoader().getFontMetrics(new Font("Arial", 14));

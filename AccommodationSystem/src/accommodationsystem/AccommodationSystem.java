@@ -31,11 +31,11 @@ public class AccommodationSystem extends Application {
      */
     public static void main(String[] args) {
         // Print out Initial Debugging Information
-        AccommodationSystem.debug("-----------------------------------------------------------------");
-        AccommodationSystem.debug("Accommodation System Application - loaded!");
-        AccommodationSystem.debug("Application created by Reece Benson, Chris Tapply and Jonas Arud");
-        AccommodationSystem.debug("Debugging set to " + (AccommodationSystem.debugging ? "ON" : "OFF"));
-        AccommodationSystem.debug("-----------------------------------------------------------------");
+        System.out.println("-----------------------------------------------------------------");
+        System.out.println("Accommodation System Application - loaded!");
+        System.out.println("Application created by Reece Benson, Chris Tapply and Jonas Arud");
+        System.out.println("Debugging set to " + (AccommodationSystem.debugging ? "ON" : "OFF"));
+        System.out.println("-----------------------------------------------------------------");
         
         // Connect to Database
         AccommodationSystem.debug("Connecting to Database...");

@@ -1,0 +1,52 @@
+#topBox {
+    -fx-background-color: rgb(55, 62, 74);
+}
+
+#contentBox {
+    -fx-background-color: rgb(48, 54, 65);
+}
+
+.combo-box {
+    -fx-background-color: #373e4a;
+    -fx-border-color: #454a54;
+    -fx-border-style: solid;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+    transition: all 300ms ease-in-out;
+    background-clip: padding-box;
+}
+
+.combo-box .cell {
+    -fx-background-color: #373e4a;
+    -fx-text-fill: lightgray;
+}
+
+.combo-box .cell:hover {
+    -fx-background-color: #454a54;
+}
+
+.combo-box .cell:selected {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.button, #viewPermsBtn, #logoutBtn {
+    -fx-background-color: #373e4a;
+    -fx-border-color: #454a54;
+    -fx-border-width: 1px;
+    -fx-border-style: solid;
+    -fx-text-alignment: left;
+    -fx-padding: 15px 20px 15px 20px;
+    -fx-text-fill: white;
+    transition: all 300ms ease-in-out;
+}
+
+.button:hover, #viewPermsBtn:hover, #logoutBtn:hover {
+    -fx-background-color: #454a54;
+    -fx-border-color: #373e4a;
+}
+
+.button:pressed {
+    -fx-background-color: #5a606d;
+    -fx-border-color: #373e4a;
+}

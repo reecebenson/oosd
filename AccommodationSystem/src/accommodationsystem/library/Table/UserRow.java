@@ -4,6 +4,7 @@
  */
 package accommodationsystem.library.Table;
 
+import accommodationsystem.library.Database;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -18,12 +19,16 @@ public class UserRow {
     private final StringProperty userName;
     private final StringProperty userPass;
     private final StringProperty userRank;
+    private final StringProperty userPerms;
 
     public UserRow(Integer userId, String userName, String userPass, String userRank) {
         this.userId = new SimpleIntegerProperty(userId);
         this.userName = new SimpleStringProperty(userName);
         this.userPass = new SimpleStringProperty(userPass);
         this.userRank = new SimpleStringProperty(userRank);
+        
+        // Get User Permissions
+        this.userPerms = new SimpleStringProperty(String.join(", ", Database.getUserPermissions(userId)));
     }
 
     public Integer getId() {
@@ -41,7 +46,8 @@ public class UserRow {
     public String getRank() {
         return userRank.getValue();
     }
-    
-    
-    
+
+    public String getPerms() {
+        return userPerms.getValue();
+    }
 }

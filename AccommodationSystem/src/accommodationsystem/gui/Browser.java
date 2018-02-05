@@ -16,18 +16,20 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -115,7 +117,6 @@ public class Browser extends GUI {
         lblSpacer = new Text("\n");
         // Hall Selector
         cbHalls = new ComboBox(Database.getHallNames(true));
-        cbHalls.setId("hallSelector");
         cbHalls.setStyle("-fx-text-fill: white");
         cbHalls.setPadding(new Insets(11, 5, 11, 5));
         cbHalls.setValue("All");
@@ -157,7 +158,7 @@ public class Browser extends GUI {
      * @param   event 
      */
     private void btnViewPerms_Click(ActionEvent event) {
-        // Open up Administrator Panel GUI
+        // Open up View Permissions GUI
         try {
             new ViewPermissions().getStage().showAndWait();
         } catch(Exception e) { }
@@ -253,6 +254,10 @@ public class Browser extends GUI {
         /**
          * Set Table Properties
          */
+        // Table Listeners
+        tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
+        tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
+        // Cell Value Factory
         hallName.setCellValueFactory(new PropertyValueFactory<>("HallNameAndNumber"));
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
         roomNumber.setCellValueFactory(new PropertyValueFactory<>("RoomNumber"));
@@ -268,7 +273,7 @@ public class Browser extends GUI {
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
-         * Style Elements
+         * Style Table Elements
          */
         // Reset XY Size
         _size_xy = 0;
@@ -283,6 +288,35 @@ public class Browser extends GUI {
             // Update XY Size
             _size_xy += (textWidth + 40);
         }
+    }
+    
+    private void tbl_Click(MouseEvent event) {
+        // Validate selected row
+        if(tbl.getSelectionModel().isEmpty())
+            return;
+        
+        // Check if we've double clicked
+        if(event.getClickCount() >= 2) {
+            btnViewLease_Click(null);
+        }
+    }
+    
+    private void tbl_Select(Object obs, Object oldSelection, Object newSelection) {
+        // Enable or Disable our Footer Buttons
+        footerBox.getChildren().stream().forEach((Node n) -> {
+            if(n instanceof Button) {
+                Button b = (Button)n;
+                b.setDisable((newSelection == null));
+            }
+        });
+        
+        // Stop execution of code if we have nothing selected
+        if(newSelection == null)
+            return;
+        
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());
     }
     
     /**
@@ -314,24 +348,46 @@ public class Browser extends GUI {
      */
     private void buildFooter() {
         /**
-         * Style Elements
+         * Declare Elements
          */
-        footerBox.setPadding(new Insets(20, 20, 20, 20));
-        footerBox.setMinHeight(175);
-        footerBox.setId("actionPane");
+        Button btnViewLease;
         
         /**
-         * Initialise Elements (temp)
+         * Initialise Elements
          */
-        for(int x = 0; x < 5; x++) {
-            Button _tBtn = new Button();
-            _tBtn.setText("Button " + String.valueOf(x + 1));
-            _tBtn.setVisible(true);
-            _tBtn.getStyleClass().add("button");
-            
-            // Compile Elements
-            footerBox.getChildren().add(_tBtn);
-        }
+        btnViewLease = new Button();
+        
+        /**
+         * Style Elements
+         */
+        // Headers
+        footerBox.setPadding(new Insets(20, 20, 20, 20));
+        footerBox.setMinHeight(100);
+        footerBox.setId("actionPane");
+        // Buttons
+        btnViewLease.setText("View Lease");
+        btnViewLease.setDisable(true); // Disabled by default, waiting for user to click an element on the TableView
+        btnViewLease.setOnAction((ActionEvent e) -> btnViewLease_Click(e));
+        
+        /**
+         * Compile Elements
+         */
+        footerBox.getChildren().add(btnViewLease);
+    }
+    
+    private void btnViewLease_Click(ActionEvent event) {
+        // Check if we're trying to view a lease that does not exist (should not occur)
+        if(tbl.getSelectionModel().isEmpty())
+            return;
+        
+        // Get LeaseData
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Open our View Lease GUI
+        try {
+            AccommodationSystem.debug("Viewing Lease: " + lease.getLeaseId());
+            new ViewLease(lease).getStage().showAndWait();
+        } catch(Exception e) { }
     }
     
     /**
@@ -364,7 +420,19 @@ public class Browser extends GUI {
          */
         super.setTitle("UWE Accommodation System");
         super.setSize(_size_xy + 25, _size_xy + 25);
-        super.finalise(true);
+        super.finaliseAndGetScene(true).addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent e) -> {
+            // Credit: fabian - https://stackoverflow.com/a/41908580
+            Node source = e.getPickResult().getIntersectedNode();
+            
+            // Move up through Node Hierachy until something other than a TableRow or Button is present
+            while(source != null && !(source instanceof TableRow) && !(source instanceof Button))
+                // Recursively get the parent of the Node until condition is met
+                source = source.getParent();
+            
+            // Check if the selected Node is null, or if a TableRow is selected but however empty, clear the selection
+            if(source == null || (source instanceof TableRow && ((TableRow) source).isEmpty()))
+                tbl.getSelectionModel().clearSelection();
+        });
     }
     
     @Override
