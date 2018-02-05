@@ -100,9 +100,10 @@ public class Hall {
         return flatsCollection;
     }
     
-    public ObservableList<Integer> getRoomsAsCollection() {
+    public ObservableList<Integer> getRoomsAsCollection(int flatId) {
         ObservableList<Integer> roomsCollection = FXCollections.observableArrayList();
         for(Room r: this.getRooms()) {
+            if(r.getFlatId() != flatId) continue;
             if(!roomsCollection.contains(r.getRoomId()))
                 roomsCollection.add(r.getRoomId());
         }

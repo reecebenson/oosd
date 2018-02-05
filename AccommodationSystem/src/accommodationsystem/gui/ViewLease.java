@@ -12,6 +12,14 @@ package accommodationsystem.gui;
  * - When updating Flat ID: Room ID should be set to empty, "Update" button should be disabled
  * - When updating values: check against database for clashes against leases existing for room etc
  * - When updating values: update values according to database
+ * 
+ * - Manager:
+ *   > able to edit Lease Number and Student Name
+ *   > able to edit the occupancy state
+ *   > check Lease Number when updating lease to check that the Lease Number does not already exist
+ * 
+ * - Warden:
+ *   > able to change the cleaning status (only)
  */
 
 import accommodationsystem.AccommodationSystem;
@@ -113,7 +121,7 @@ public class ViewLease extends GUI {
         // ComboBox
         hallName = new ComboBox(Database.getHallNames(false));
         flatNumber = new ComboBox(this.leaseData.getHall().getFlatsAsCollection());
-        roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection());
+        roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()));
         occupancy = new ComboBox(Occupancy.getOccupancies());
         cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
@@ -220,28 +228,28 @@ public class ViewLease extends GUI {
         /**
          * Cast Objects to Strings
          */
-        String oldVal = (String)oldValue;
         String newVal = (String)newValue;
         
-        // Debug
-        AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+        /**
+         * Debug
+         */
+        AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
         
         // Disable Update Button
         btnUpdate.setDisable(true);
+        flatNumber.setDisable(false);
+        roomNumber.setDisable(true);
         
         // Clear items from our other ComboBoxes
         flatNumber.getItems().clear();
-        roomNumber.getItems().clear();
         
         // Set our combo box values to null
         flatNumber.setValue(null);
-        roomNumber.setValue(null);
         
         // Populate ComboBoxes
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
         flatNumber.setItems(tempHall.getFlatsAsCollection());
-        roomNumber.setItems(tempHall.getRoomsAsCollection());
-        System.out.println("populated halls");
+        System.out.println("populated flats");
     }
     
     /**
@@ -267,6 +275,21 @@ public class ViewLease extends GUI {
          * Debug
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+        
+        // Disable Update Button
+        btnUpdate.setDisable(true);
+        roomNumber.setDisable(false);
+        
+        // Clear items from our other ComboBoxes
+        roomNumber.getItems().clear();
+        
+        // Set our combo box values to null
+        roomNumber.setValue(null);
+        
+        // Populate ComboBoxes
+        Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
+        roomNumber.setItems(tempHall.getRoomsAsCollection((int)flatNumber.getSelectionModel().getSelectedItem()));
+        System.out.println("populated rooms");
     }
     
     /**
@@ -292,6 +315,9 @@ public class ViewLease extends GUI {
          * Debug
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+        
+        // Enable Update Lease button
+        btnUpdate.setDisable(false);
     }
     
     private void btnUpdate_Click(ActionEvent event) {
