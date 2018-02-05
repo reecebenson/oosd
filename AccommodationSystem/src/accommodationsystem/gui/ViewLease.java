@@ -6,11 +6,15 @@ package accommodationsystem.gui;
 
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
+import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Lease.Occupancy;
 import accommodationsystem.library.LeaseData;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -67,6 +71,12 @@ public class ViewLease extends GUI {
         /**
          * Declare Elements
          */
+        Button btnUpdate;
+        Label lblHallName,
+                lblHallId,
+                lblRoomNumber,
+                lblOccupancy,
+                lblCleanStatus;
         ComboBox hallName,
                 hallId,
                 roomNumber,
@@ -76,16 +86,26 @@ public class ViewLease extends GUI {
         /**
          * Initialise Elements
          */
-        hallName = new ComboBox(Database.getHallNames(true));
+        // Button
+        btnUpdate = new Button();
+        // Label
+        lblHallName = new Label("Hall Name:");
+        lblHallId = new Label("Hall ID:");
+        lblRoomNumber = new Label("Room Number:");
+        lblOccupancy = new Label("Occupancy:");
+        lblCleanStatus = new Label("Clean Status");
+        // ComboBox
+        hallName = new ComboBox(Database.getHallNames(false));
         hallId = new ComboBox();
         roomNumber = new ComboBox();
-        occupancy = new ComboBox();
-        cleanStatus = new ComboBox();
+        occupancy = new ComboBox(Occupancy.getOccupancies());
+        cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
         /**
          * Style Elements
          */
         // Headers
+        contentBox.setAlignment(Pos.CENTER);
         contentBox.setPadding(new Insets(20, 20, 20, 20));
         contentBox.setVgap(10d);
         contentBox.setHgap(10d);
@@ -115,15 +135,32 @@ public class ViewLease extends GUI {
         cleanStatus.setValue(this.leaseData.getCleanStatusName());
         cleanStatus.setPrefWidth(150.0);
         cleanStatus.setPadding(new Insets(11, 5, 11, 5));
+        // Update Button
+        btnUpdate.setText("Update Lease");
+        btnUpdate.setDefaultButton(true);
+        btnUpdate.setMaxWidth(Double.MAX_VALUE);
+        btnUpdate.setAlignment(Pos.CENTER);
         
         /**
          * Compile Elements
          */
-        contentBox.add(hallId, 0, 0);
-        contentBox.add(hallName, 0, 1);
-        contentBox.add(roomNumber, 0, 2);
-        contentBox.add(occupancy, 0, 3);
-        contentBox.add(cleanStatus, 0, 4);
+        // Hall Name
+        contentBox.add(lblHallName, 0, 0);
+        contentBox.add(hallName, 1, 0);
+        // Hall ID
+        contentBox.add(lblHallId, 0, 1);
+        contentBox.add(hallId, 1, 1);
+        // Room Number
+        contentBox.add(lblRoomNumber, 0, 2);
+        contentBox.add(roomNumber, 1, 2);
+        // Occupancy
+        contentBox.add(lblOccupancy, 0, 3);
+        contentBox.add(occupancy, 1, 3);
+        // Clean Status
+        contentBox.add(lblCleanStatus, 0, 4);
+        contentBox.add(cleanStatus, 1, 4);
+        // Update Button
+        contentBox.add(btnUpdate, 1, 5);
     }
     
     

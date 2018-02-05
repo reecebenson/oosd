@@ -6,6 +6,11 @@
     -fx-background-color: rgb(48, 54, 65);
 }
 
+.label {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
 .combo-box {
     -fx-background-color: #373e4a;
     -fx-border-color: #454a54;

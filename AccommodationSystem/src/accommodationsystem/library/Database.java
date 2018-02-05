@@ -4,6 +4,8 @@
  */
 package accommodationsystem.library;
 
+import accommodationsystem.library.Lease.Room;
+import accommodationsystem.library.Lease.Hall;
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.library.Table.HallRow;
 import accommodationsystem.library.Table.RoomRow;
@@ -56,10 +58,6 @@ public class Database {
             // Handle Error
             return null;
         }
-    }
-    
-    public String encryptString(String text) {
-        return "";
     }
     
     public static boolean validateLogin(String username, String password) {
@@ -182,7 +180,7 @@ public class Database {
         return null;
     }
     
-    public static ObservableList<String> getHallNames(boolean allTag) {      
+    public static ObservableList<String> getHallNames(boolean allTag) {
         // Check if user is logged in
         if(!User.loggedIn())
             return FXCollections.observableArrayList("");

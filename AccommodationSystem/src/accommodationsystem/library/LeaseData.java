@@ -4,6 +4,9 @@
  */
 package accommodationsystem.library;
 
+import accommodationsystem.library.Lease.CleaningStatus;
+import accommodationsystem.library.Lease.Room;
+import accommodationsystem.library.Lease.Hall;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
