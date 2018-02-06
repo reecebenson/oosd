@@ -7,10 +7,10 @@ package accommodationsystem.gui;
 /**
  * TODO:
  * 
- * - Import all available rooms into `rooms` table in database
- * - When updating Hall Name: Flat ID and Room ID should be set to empty, "Update" button should be disabled
- * - When updating Flat ID: Room ID should be set to empty, "Update" button should be disabled
- * - When updating values: check against database for clashes against leases existing for room etc
+ * D Import all available rooms into `rooms` table in database
+ * D When updating Hall Name: Flat ID and Room ID should be set to empty, "Update" button should be disabled
+ * D When updating Flat ID: Room ID should be set to empty, "Update" button should be disabled
+ * D When updating values: check against database for clashes against leases existing for room etc
  * - When updating values: update values according to database
  * 
  * - Manager:
@@ -30,14 +30,19 @@ import accommodationsystem.library.Lease.Hall;
 import accommodationsystem.library.Lease.Occupancy;
 import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Permissions;
+import accommodationsystem.library.Student;
 import accommodationsystem.library.User;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -58,6 +63,7 @@ public class ViewLease extends GUI {
     LeaseData leaseData;
     // Elements
     Button btnUpdate;
+    TextField leaseId;
     ComboBox hallName,
             flatNumber,
             roomNumber,
@@ -102,7 +108,8 @@ public class ViewLease extends GUI {
         /**
          * Declare Elements
          */
-        Label lblHallName,
+        Label lblLeaseId,
+                lblHallName,
                 lblFlatNumber,
                 lblRoomNumber,
                 lblStudentName,
@@ -115,6 +122,7 @@ public class ViewLease extends GUI {
         // Button
         btnUpdate = new Button();
         // Label
+        lblLeaseId = new Label("Lease ID:");
         lblHallName = new Label("Hall Name:");
         lblFlatNumber = new Label("Flat Number:");
         lblRoomNumber = new Label("Room Number:");
@@ -122,6 +130,7 @@ public class ViewLease extends GUI {
         lblOccupancy = new Label("Occupancy:");
         lblCleanStatus = new Label("Clean Status");
         // ComboBox
+        leaseId = new TextField();
         hallName = new ComboBox(Database.getHallNames(false));
         flatNumber = new ComboBox(this.leaseData.getHall().getFlatsAsCollection());
         roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()));
@@ -139,11 +148,18 @@ public class ViewLease extends GUI {
         contentBox.setHgap(10d);
         contentBox.setId("contentBox");
         // Labels
+        GridPane.setHalignment(lblLeaseId, HPos.RIGHT);
         GridPane.setHalignment(lblHallName, HPos.RIGHT);
         GridPane.setHalignment(lblFlatNumber, HPos.RIGHT);
         GridPane.setHalignment(lblRoomNumber, HPos.RIGHT);
         GridPane.setHalignment(lblOccupancy, HPos.RIGHT);
         GridPane.setHalignment(lblCleanStatus, HPos.RIGHT);
+        // hallName ComboBox
+        leaseId.setStyle("-fx-text-fill: white");
+        leaseId.setText(this.leaseData.getLeaseId() != null ? String.valueOf(this.leaseData.getLeaseId()) : "");
+        leaseId.setPrefWidth(225.0);
+        leaseId.setPadding(new Insets(11, 7, 11, 7));
+        leaseId.textProperty().addListener((options, oldValue, newValue) -> leaseId_Changed(options, oldValue, newValue));
         // hallName ComboBox
         hallName.setStyle("-fx-text-fill: white");
         hallName.setValue(this.leaseData.getHallName());
@@ -164,7 +180,7 @@ public class ViewLease extends GUI {
         roomNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> roomNumber_Changed(options, oldValue, newValue));
         // studentName ComboBox
         studentName.setStyle("-fx-text-fill: white");
-        studentName.setValue(this.leaseData.getStudent().getStudentId() + ": " + this.leaseData.getStudentName());
+        studentName.setValue(this.leaseData.getStudent() != null ? this.leaseData.getStudent().getStudentId() + ": " + this.leaseData.getStudentName() : "");
         studentName.setPrefWidth(225.0);
         studentName.setPadding(new Insets(11, 5, 11, 5));
         // occupancy ComboBox
@@ -188,6 +204,7 @@ public class ViewLease extends GUI {
          * Style Elements in accordance to Permissions
          */
         if(!User.hasPermission(Permissions.EDIT_LEASE)) {
+            leaseId.setDisable(true);
             hallName.setDisable(true);
             flatNumber.setDisable(true);
             roomNumber.setDisable(true);
@@ -203,25 +220,62 @@ public class ViewLease extends GUI {
          * Compile Elements
          */
         // Hall Name
-        contentBox.add(lblHallName, 0, 0);
-        contentBox.add(hallName, 1, 0);
+        contentBox.add(lblLeaseId, 0, 0);
+        contentBox.add(leaseId, 1, 0);
+        // Hall Name
+        contentBox.add(lblHallName, 0, 1);
+        contentBox.add(hallName, 1, 1);
         // Hall ID
-        contentBox.add(lblFlatNumber, 0, 1);
-        contentBox.add(flatNumber, 1, 1);
+        contentBox.add(lblFlatNumber, 0, 2);
+        contentBox.add(flatNumber, 1, 2);
         // Room Number
-        contentBox.add(lblRoomNumber, 0, 2);
-        contentBox.add(roomNumber, 1, 2);
+        contentBox.add(lblRoomNumber, 0, 3);
+        contentBox.add(roomNumber, 1, 3);
         // Student Name
-        contentBox.add(lblStudentName, 0, 3);
-        contentBox.add(studentName, 1, 3);
+        contentBox.add(lblStudentName, 0, 4);
+        contentBox.add(studentName, 1, 4);
         // Occupancy
-        contentBox.add(lblOccupancy, 0, 4);
-        contentBox.add(occupancy, 1, 4);
+        contentBox.add(lblOccupancy, 0, 5);
+        contentBox.add(occupancy, 1, 5);
         // Clean Status
-        contentBox.add(lblCleanStatus, 0, 5);
-        contentBox.add(cleanStatus, 1, 5);
+        contentBox.add(lblCleanStatus, 0, 6);
+        contentBox.add(cleanStatus, 1, 6);
         // Update Button
-        contentBox.add(btnUpdate, 1, 6);
+        contentBox.add(btnUpdate, 1, 7);
+    }
+    
+    /**
+     * @name    leaseId_Changed
+     * @desc    Handles when the TextField value changes
+     * 
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void leaseId_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check if values are null to avoid errors
+         */
+        if(newValue == null) return;
+        
+        /**
+         * Cast Objects to Strings
+         */
+        String oldVal = (String)oldValue;
+        String newVal = (String)newValue;
+        
+        /**
+         * Debug
+         */
+        AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal);
+        
+        /**
+         * Check if the value added was of character format
+        */
+        if (!newVal.matches("[0-9]+")) {
+            new Alert(Alert.AlertType.ERROR, "Lease IDs can only contain numbers!", ButtonType.OK).show();
+            leaseId.setText(oldVal.matches("[0-9]+") ? oldVal : "");
+        }
     }
     
     /**
@@ -263,7 +317,6 @@ public class ViewLease extends GUI {
         // Populate ComboBoxes
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
         flatNumber.setItems(tempHall.getFlatsAsCollection());
-        System.out.println("populated flats");
     }
     
     /**
@@ -303,7 +356,7 @@ public class ViewLease extends GUI {
         // Populate ComboBoxes
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
         roomNumber.setItems(tempHall.getRoomsAsCollection((int)flatNumber.getSelectionModel().getSelectedItem()));
-        System.out.println("populated rooms");
+        AccommodationSystem.debug("populated rooms");
     }
     
     /**
@@ -335,9 +388,35 @@ public class ViewLease extends GUI {
     }
     
     private void btnUpdate_Click(ActionEvent event) {
-        // todo:
-        // see line 10
-        AccommodationSystem.debug("update button pressed!1!11!!1!1!11!!!");
+        // Get Lease Data
+        Student newStudent = Database.getStudentFromId(studentName.getSelectionModel().getSelectedIndex() + 1);
+        
+        // Debug
+        AccommodationSystem.debug("LEASE ID: " + leaseId.getText());
+        AccommodationSystem.debug("HALL NAME: " + hallName.getSelectionModel().getSelectedItem());
+        AccommodationSystem.debug("FLAT ID: " + flatNumber.getSelectionModel().getSelectedItem());
+        AccommodationSystem.debug("ROOM ID: " + roomNumber.getSelectionModel().getSelectedItem());
+        AccommodationSystem.debug("STUDENT NAME: " + studentName.getSelectionModel().getSelectedItem());
+        AccommodationSystem.debug("OCCUPANCY: " + occupancy.getSelectionModel().getSelectedItem());
+        AccommodationSystem.debug("CLEAN STATUS: " + cleanStatus.getSelectionModel().getSelectedItem());
+        
+        // Update this Lease
+        this.leaseData.setLeaseId(new SimpleIntegerProperty(Integer.valueOf(leaseId.getText())));
+        this.leaseData.setHallId(new SimpleIntegerProperty(hallName.getSelectionModel().getSelectedIndex() + 1));
+        this.leaseData.setFlatNumber(new SimpleIntegerProperty((int)flatNumber.getSelectionModel().getSelectedItem()));
+        this.leaseData.setRoomNumber(new SimpleIntegerProperty((int)roomNumber.getSelectionModel().getSelectedItem()));
+        this.leaseData.setStudentId(new SimpleIntegerProperty(newStudent.getStudentId()));
+        this.leaseData.setOccupied(new SimpleIntegerProperty((int)Occupancy.getId((String)occupancy.getSelectionModel().getSelectedItem())));
+        this.leaseData.setCleanStatus(new SimpleIntegerProperty((int)CleaningStatus.getId((String)cleanStatus.getSelectionModel().getSelectedItem())));
+        
+        // Validate Lease ID
+        if(Database.checkValidLeaseNumber(this.leaseData.getLeaseId())) {
+            System.out.println("updatelease");
+            Database.updateLease(this.leaseData);
+        }
+        
+        
+        //boolean updateComplete = Database.updateLease(this.leaseData);
     }
     
     /**
@@ -374,7 +453,8 @@ public class ViewLease extends GUI {
         /**
          * Finalise our GUI
          */
-        super.setTitle("View Lease: " + String.valueOf(this.leaseData.getLeaseId()));
+        Integer leaseId = this.leaseData.getLeaseId();
+        super.setTitle("View Lease: " + (leaseId == null ? "Unoccupied" : String.valueOf(leaseId)));
         super.setSize(250, 700);
         super.finalise(false);
     }

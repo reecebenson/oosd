@@ -390,7 +390,8 @@ public class Browser extends GUI {
         
         // Open our View Lease GUI
         try {
-            AccommodationSystem.debug("Viewing Lease: " + lease.getLeaseId());
+            Integer leaseId = lease.getLeaseId();
+            AccommodationSystem.debug("Viewing Lease: " + (leaseId == null ? 0 : leaseId));
             new ViewLease(lease).getStage().showAndWait();
         } catch(Exception e) { }
     }

@@ -253,7 +253,7 @@ public class Database {
         List<StudentRow> studentList = new ArrayList<>();
         
         // Check User Permissions
-        if(User.hasPermission(Permissions.ADMIN_PANEL))
+        if(User.hasPermission(Permissions.VIEW_LEASES))
         {
             // Query Variables
             Statement pureStatement = null;
@@ -289,7 +289,7 @@ public class Database {
         ObservableList<String> studentList = FXCollections.observableArrayList();
         
         // Check User Permissions
-        if(User.hasPermission(Permissions.ADMIN_PANEL))
+        if(User.hasPermission(Permissions.VIEW_LEASES))
         {
             for(StudentRow s: Database.getStudentsAsRow()) {
                 studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
@@ -460,5 +460,101 @@ public class Database {
         }
         
         return userPermissions;
+    }
+    
+    
+ //*   > able to edit Lease Number and Student Name
+ //*   > able to edit the occupancy state
+    
+    public static boolean updateRoom(int roomId, int flatId, int hallId, int occupancy, int cleaningStatus) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES)) {
+            // Update Lease
+            PreparedStatement prepStatement = null;
+            ResultSet resultSet = null;
+            String query;
+            
+            // Check User Permissions
+            if(User.hasPermission(Permissions.EDIT_LEASE) && User.hasPermission(Permissions.EDIT_CLEAN)) {
+                query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+            } else if(User.hasPermission(Permissions.EDIT_LEASE)) {
+                query = "";
+            } else if(User.hasPermission(Permissions.EDIT_CLEAN)) {
+                query = "";
+            }
+            
+            // do stuff, bind params ^^^^
+        }
+        return false;
+    }
+    
+    public static boolean updateLease(LeaseData lease) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.UPDATE_LEASES)) {
+            // Update Lease
+            PreparedStatement prepStatement = null;
+            ResultSet resultSet = null;
+            String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+            
+            // Validate Lease Data
+            if(!String.valueOf(lease.getLeaseId()).matches("[0-9]+"))
+                return false;
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setInt(1, lease.getLeaseId());
+                prepStatement.setInt(2, lease.getStudent().getStudentId());
+                prepStatement.setInt(3, lease.getRoom().getRoomId());
+                prepStatement.setInt(4, lease.getRoom().getFlatId());
+                prepStatement.setInt(5, lease.getRoom().getHallId());
+                prepStatement.setInt(6, lease.getRoom().getRoomId());
+                prepStatement.setInt(7, lease.getRoom().getFlatId());
+                prepStatement.setInt(8, lease.getRoom().getHallId());
+                resultSet = prepStatement.executeQuery();
+                System.out.println("updated!!1!");
+                return true;
+            } catch(Exception ex) {
+                System.out.println("something fucked up.. m'kay");
+            }
+        }
+        return false;
+    }
+    
+ //*   > check Lease Number when updating lease to check that the Lease Number does not already exist*/
+    
+    public static boolean checkValidLeaseNumber(int leaseId) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Prepare SQL Statement
+        PreparedStatement prepStatement = null;
+        ResultSet resultSet = null;
+        String query = "SELECT * FROM `leases` WHERE `lease_id` = ?";
+        
+        try {
+            prepStatement = Database._conn.prepareStatement(query);
+            prepStatement.setInt(1, leaseId);
+            resultSet = prepStatement.executeQuery();
+            
+            return !(resultSet.next());
+        } catch(Exception e) {
+            AccommodationSystem.debug("Database Error: " + e.getMessage());
+        } finally {
+            try {
+                if(prepStatement != null) prepStatement.close();
+                if(resultSet != null) resultSet.close();
+            }catch(Exception x) {}
+        }
+        
+        return false;
     }
 }

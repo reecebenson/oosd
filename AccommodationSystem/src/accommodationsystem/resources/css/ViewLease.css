@@ -11,7 +11,7 @@
     -fx-font-weight: bold;
 }
 
-.combo-box {
+.text-field, .combo-box {
     -fx-background-color: #373e4a;
     -fx-border-color: #454a54;
     -fx-border-style: solid;
@@ -21,16 +21,17 @@
     background-clip: padding-box;
 }
 
-.combo-box .cell {
+.text-field, .combo-box .cell {
     -fx-background-color: #373e4a;
     -fx-text-fill: lightgray;
+    -fx-font-weight: bold;
 }
 
-.combo-box .cell:hover {
+.text-field .cell:hover, .combo-box .cell:hover {
     -fx-background-color: #454a54;
 }
 
-.combo-box .cell:selected {
+.text-field -cell:selected, .combo-box .cell:selected {
     -fx-text-fill: white;
     -fx-font-weight: bold;
 }
