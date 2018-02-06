@@ -61,6 +61,7 @@ public class ViewLease extends GUI {
     ComboBox hallName,
             flatNumber,
             roomNumber,
+            studentName,
             occupancy,
             cleanStatus;
     
@@ -104,6 +105,7 @@ public class ViewLease extends GUI {
         Label lblHallName,
                 lblFlatNumber,
                 lblRoomNumber,
+                lblStudentName,
                 lblOccupancy,
                 lblCleanStatus;
         
@@ -116,12 +118,14 @@ public class ViewLease extends GUI {
         lblHallName = new Label("Hall Name:");
         lblFlatNumber = new Label("Flat Number:");
         lblRoomNumber = new Label("Room Number:");
+        lblStudentName = new Label("Student Name:");
         lblOccupancy = new Label("Occupancy:");
         lblCleanStatus = new Label("Clean Status");
         // ComboBox
         hallName = new ComboBox(Database.getHallNames(false));
         flatNumber = new ComboBox(this.leaseData.getHall().getFlatsAsCollection());
         roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()));
+        studentName = new ComboBox(Database.getStudentsAsCollection());
         occupancy = new ComboBox(Occupancy.getOccupancies());
         cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
@@ -158,6 +162,11 @@ public class ViewLease extends GUI {
         roomNumber.setPrefWidth(225.0);
         roomNumber.setPadding(new Insets(11, 5, 11, 5));
         roomNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> roomNumber_Changed(options, oldValue, newValue));
+        // studentName ComboBox
+        studentName.setStyle("-fx-text-fill: white");
+        studentName.setValue(this.leaseData.getStudent().getStudentId() + ": " + this.leaseData.getStudentName());
+        studentName.setPrefWidth(225.0);
+        studentName.setPadding(new Insets(11, 5, 11, 5));
         // occupancy ComboBox
         occupancy.setStyle("-fx-text-fill: white");
         occupancy.setValue(this.leaseData.getOccupiedStatus());
@@ -182,10 +191,11 @@ public class ViewLease extends GUI {
             hallName.setDisable(true);
             flatNumber.setDisable(true);
             roomNumber.setDisable(true);
+            occupancy.setDisable(true);
+            studentName.setDisable(true);
         }
         
         if(!User.hasPermission(Permissions.EDIT_CLEAN)) {
-            occupancy.setDisable(true);
             cleanStatus.setDisable(true);
         }
         
@@ -201,14 +211,17 @@ public class ViewLease extends GUI {
         // Room Number
         contentBox.add(lblRoomNumber, 0, 2);
         contentBox.add(roomNumber, 1, 2);
+        // Student Name
+        contentBox.add(lblStudentName, 0, 3);
+        contentBox.add(studentName, 1, 3);
         // Occupancy
-        contentBox.add(lblOccupancy, 0, 3);
-        contentBox.add(occupancy, 1, 3);
+        contentBox.add(lblOccupancy, 0, 4);
+        contentBox.add(occupancy, 1, 4);
         // Clean Status
-        contentBox.add(lblCleanStatus, 0, 4);
-        contentBox.add(cleanStatus, 1, 4);
+        contentBox.add(lblCleanStatus, 0, 5);
+        contentBox.add(cleanStatus, 1, 5);
         // Update Button
-        contentBox.add(btnUpdate, 1, 5);
+        contentBox.add(btnUpdate, 1, 6);
     }
     
     /**
@@ -245,6 +258,7 @@ public class ViewLease extends GUI {
         
         // Set our combo box values to null
         flatNumber.setValue(null);
+        roomNumber.setValue(null);
         
         // Populate ComboBoxes
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
@@ -321,6 +335,8 @@ public class ViewLease extends GUI {
     }
     
     private void btnUpdate_Click(ActionEvent event) {
+        // todo:
+        // see line 10
         AccommodationSystem.debug("update button pressed!1!11!!1!1!11!!!");
     }
     
@@ -359,7 +375,7 @@ public class ViewLease extends GUI {
          * Finalise our GUI
          */
         super.setTitle("View Lease: " + String.valueOf(this.leaseData.getLeaseId()));
-        super.setSize(400, 600);
+        super.setSize(250, 700);
         super.finalise(false);
     }
     

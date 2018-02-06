@@ -46,13 +46,15 @@ public class Hall {
         this.address = address;
         this.postcode = postcode;
         this.phone = phone;
-        this.roomCount = roomCount;
+        this.roomCount = 0;
         
         // Get Rooms linked to this Hall
         this.rooms = new ArrayList<>();
         for(Room r: Database.getRooms()) {
-            if(r.getHallId() == id)
+            if(r.getHallId() == id) {
+                this.roomCount++;
                 this.rooms.add(r);
+            }
         }
     }
 

@@ -126,36 +126,20 @@ public class Database {
         
         return hallList;
     }
-    public static List<HallRow> getHallsAsRow() {        
+    public static List<HallRow> getHallsAsRow() {
         // Check if user is logged in
         if(!User.loggedIn())
             return new ArrayList<>();
         
-        // Initialise Leases List
+        // Initialise HallRow List
         List<HallRow> hallList = new ArrayList<>();
         
         // Check User Permissions
         if(User.hasPermission(Permissions.ADMIN_PANEL))
         {
-            // Query Variables
-            Statement pureStatement = null;
-            ResultSet resultSet = null;
-            
-            try {
-                String query = "SELECT * FROM `halls`";
-                pureStatement = Database._conn.createStatement();
-                resultSet = pureStatement.executeQuery(query);
-
-                while(resultSet.next()) {
-                    hallList.add(new HallRow(resultSet.getInt("id"), resultSet.getString("name"), resultSet.getString("short_name"), resultSet.getString("address"), resultSet.getString("postcode"), resultSet.getString("phone"), resultSet.getInt("room_count")));
-                }
-            } catch(SQLException e) {
-                AccommodationSystem.debug(e.getMessage());
-            } finally {
-                try {
-                    if(pureStatement != null) pureStatement.close();
-                    if(resultSet != null) resultSet.close();
-                }catch(Exception x) {}
+            // Get Halls
+            for(Hall h: Database.getHalls()) {
+                hallList.add(new HallRow(h.getId(), h.getName(), h.getShortName(), h.getAddress(), h.getPostcode(), h.getPhone(), h.getRoomCount()));
             }
         }
         
@@ -251,25 +235,9 @@ public class Database {
         // Check User Permissions
         if(User.hasPermission(Permissions.ADMIN_PANEL))
         {
-            // Query Variables
-            Statement pureStatement = null;
-            ResultSet resultSet = null;
-            
-            try {
-                String query = "SELECT * FROM `rooms`";
-                pureStatement = Database._conn.createStatement();
-                resultSet = pureStatement.executeQuery(query);
-
-                while(resultSet.next()) {
-                    roomList.add(new RoomRow(resultSet.getInt("room_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
-                }
-            } catch(SQLException e) {
-                AccommodationSystem.debug(e.getMessage());
-            } finally {
-                try {
-                    if(pureStatement != null) pureStatement.close();
-                    if(resultSet != null) resultSet.close();
-                }catch(Exception x) {}
+            // Get Rooms
+            for(Room h: Database.getRooms()) {
+                roomList.add(new RoomRow(h.getRoomId(), h.getHallId(), h.getOccupied(), h.getCleanStatus()));
             }
         }
         
@@ -306,6 +274,25 @@ public class Database {
                     if(pureStatement != null) pureStatement.close();
                     if(resultSet != null) resultSet.close();
                 }catch(Exception x) {}
+            }
+        }
+        
+        return studentList;
+    }
+    
+    public static ObservableList<String> getStudentsAsCollection() {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return FXCollections.observableArrayList();
+        
+        // Initialise Leases List
+        ObservableList<String> studentList = FXCollections.observableArrayList();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL))
+        {
+            for(StudentRow s: Database.getStudentsAsRow()) {
+                studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
             }
         }
         
