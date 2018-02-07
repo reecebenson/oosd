@@ -56,6 +56,8 @@ public class ViewLease extends GUI {
     /**
      * Variables
      */
+    // Parent
+    Browser parent;
     // Panes
     HBox headerBox = new HBox();
     GridPane contentBox = new GridPane();
@@ -391,6 +393,9 @@ public class ViewLease extends GUI {
         // Get Lease Data
         Student newStudent = Database.getStudentFromId(studentName.getSelectionModel().getSelectedIndex() + 1);
         
+        // Variables
+        int previousLeaseId = -1;
+        
         // Debug
         AccommodationSystem.debug("LEASE ID: " + leaseId.getText());
         AccommodationSystem.debug("HALL NAME: " + hallName.getSelectionModel().getSelectedItem());
@@ -400,19 +405,59 @@ public class ViewLease extends GUI {
         AccommodationSystem.debug("OCCUPANCY: " + occupancy.getSelectionModel().getSelectedItem());
         AccommodationSystem.debug("CLEAN STATUS: " + cleanStatus.getSelectionModel().getSelectedItem());
         
-        // Update this Lease
-        this.leaseData.setLeaseId(new SimpleIntegerProperty(Integer.valueOf(leaseId.getText())));
-        this.leaseData.setHallId(new SimpleIntegerProperty(hallName.getSelectionModel().getSelectedIndex() + 1));
-        this.leaseData.setFlatNumber(new SimpleIntegerProperty((int)flatNumber.getSelectionModel().getSelectedItem()));
-        this.leaseData.setRoomNumber(new SimpleIntegerProperty((int)roomNumber.getSelectionModel().getSelectedItem()));
-        this.leaseData.setStudentId(new SimpleIntegerProperty(newStudent.getStudentId()));
-        this.leaseData.setOccupied(new SimpleIntegerProperty((int)Occupancy.getId((String)occupancy.getSelectionModel().getSelectedItem())));
-        this.leaseData.setCleanStatus(new SimpleIntegerProperty((int)CleaningStatus.getId((String)cleanStatus.getSelectionModel().getSelectedItem())));
+        // Validate and Sanitise inputs
+        SimpleIntegerProperty tLeaseId, tHallId, tFlatNumber, tRoomNumber, tOccupiedState, tCleanStatus;
+        boolean dataIsValid = true;
         
-        // Validate Lease ID
-        if(Database.checkValidLeaseNumber(this.leaseData.getLeaseId())) {
-            System.out.println("updatelease");
-            Database.updateLease(this.leaseData);
+        // Check Lease ID
+        if(leaseId.getText().matches("[0-9]+") && !leaseId.getText().isEmpty()) {
+            tLeaseId = new SimpleIntegerProperty(Integer.valueOf(leaseId.getText()));
+            previousLeaseId = this.leaseData.getLeaseId();
+            this.leaseData.setLeaseId(tLeaseId);
+        } else dataIsValid = false;
+        
+        // Check Hall ID
+        if((hallName.getSelectionModel().getSelectedIndex() + 1) >= 1 && (hallName.getSelectionModel().getSelectedIndex() + 1) <= Database.getHallNames(false).size()) {
+            tHallId = new SimpleIntegerProperty(hallName.getSelectionModel().getSelectedIndex() + 1);
+            this.leaseData.setHallId(tHallId);
+        } else dataIsValid = false;
+        
+        // Check Flat ID
+        if(this.leaseData.getHall().getFlatsAsCollection().contains((int)flatNumber.getSelectionModel().getSelectedItem())) {
+            tFlatNumber = new SimpleIntegerProperty((int)flatNumber.getSelectionModel().getSelectedItem());
+            this.leaseData.setFlatNumber(tFlatNumber);
+        } else dataIsValid = false;
+        
+        // Check Room ID
+        if(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()).contains((int)roomNumber.getSelectionModel().getSelectedItem())) {
+            tRoomNumber = new SimpleIntegerProperty((int)roomNumber.getSelectionModel().getSelectedItem());
+            this.leaseData.setRoomNumber(tRoomNumber);
+        } else dataIsValid = false;
+        
+        // Check Occupancy
+        if(Occupancy.getOccupancies().contains((String)occupancy.getSelectionModel().getSelectedItem())) {
+            tOccupiedState = new SimpleIntegerProperty((int)Occupancy.getId((String)occupancy.getSelectionModel().getSelectedItem()));
+            this.leaseData.setOccupied(tOccupiedState);
+        } else dataIsValid = false;
+        
+        // Check Cleaning State
+        if(CleaningStatus.getStatuses().contains((String)cleanStatus.getSelectionModel().getSelectedItem())) {
+            tCleanStatus = new SimpleIntegerProperty((int)CleaningStatus.getId((String)cleanStatus.getSelectionModel().getSelectedItem()));
+            this.leaseData.setCleanStatus(tCleanStatus);
+        } else dataIsValid = false;
+        
+        if(dataIsValid) {
+            // Validate Lease ID
+            if(Database.checkValidLeaseNumber(this.leaseData.getLeaseId()) || (this.leaseData.getLeaseId() == previousLeaseId)) {
+                if(Database.updateLease(this.leaseData)) {
+                    try {
+                        parent.buildTable(0);
+                        this.close();
+                    } catch(Exception ex) { }
+                } else new Alert(Alert.AlertType.ERROR, "Unable to update lease.", ButtonType.OK).show();
+            } else { new Alert(Alert.AlertType.ERROR, "Lease ID is already in use.", ButtonType.OK).show(); this.leaseData.setLeaseId(new SimpleIntegerProperty(previousLeaseId)); }
+        } else {
+            new Alert(Alert.AlertType.ERROR, "The data you have supplied is invalid.", ButtonType.OK).show();
         }
         
         
@@ -423,11 +468,12 @@ public class ViewLease extends GUI {
      * @name    Default Constructor
      * @desc    Initialise the ViewLease GUI
      * 
+     * @param   browser
      * @param   lease
      * 
      * @throws  Exception 
      */
-    public ViewLease(LeaseData lease) throws Exception {
+    public ViewLease(Browser browser, LeaseData lease) throws Exception {
         /**
          * Debug
          */
@@ -436,6 +482,7 @@ public class ViewLease extends GUI {
         /**
          * Set Variables
          */
+        this.parent = browser;
         this.leaseData = lease;
         
         /**

@@ -504,10 +504,6 @@ public class Database {
             ResultSet resultSet = null;
             String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
             
-            // Validate Lease Data
-            if(!String.valueOf(lease.getLeaseId()).matches("[0-9]+"))
-                return false;
-            
             try {
                 prepStatement = Database._conn.prepareStatement(query);
                 prepStatement.setInt(1, lease.getLeaseId());
@@ -518,13 +514,14 @@ public class Database {
                 prepStatement.setInt(6, lease.getRoom().getRoomId());
                 prepStatement.setInt(7, lease.getRoom().getFlatId());
                 prepStatement.setInt(8, lease.getRoom().getHallId());
-                resultSet = prepStatement.executeQuery();
+                prepStatement.executeUpdate();
                 System.out.println("updated!!1!");
                 return true;
             } catch(Exception ex) {
+                System.out.println(ex.getMessage());
                 System.out.println("something fucked up.. m'kay");
             }
-        }
+        } else System.out.println("no perms");
         return false;
     }
     

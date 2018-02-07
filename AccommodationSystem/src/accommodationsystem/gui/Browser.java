@@ -12,6 +12,7 @@ import accommodationsystem.library.Database;
 import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
+import java.util.Optional;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -40,6 +41,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
  *
@@ -220,8 +223,10 @@ public class Browser extends GUI {
     /**
      * @name    buildTable
      * @desc    Create the Table of the "Browser" GUI
+     * 
+     * @param  hallNumber
      */
-    private void buildTable(int hallNumber) {
+    public void buildTable(int hallNumber) {
         /**
          * Clean-up Table
          * Only call this if the form has previously been finalised
@@ -392,7 +397,13 @@ public class Browser extends GUI {
         try {
             Integer leaseId = lease.getLeaseId();
             AccommodationSystem.debug("Viewing Lease: " + (leaseId == null ? 0 : leaseId));
-            new ViewLease(lease).getStage().showAndWait();
+            
+            // Modal
+            Stage viewLease = new ViewLease(this, lease).getStage();
+            viewLease.initOwner(this.getScene().getWindow());
+            viewLease.initModality(Modality.APPLICATION_MODAL);
+            viewLease.showAndWait();
+            
         } catch(Exception e) { }
     }
     

@@ -20,6 +20,7 @@ public class GUI {
     /**
      * Variables used for classes that extend this Class
      */
+    private     Scene       _scene;
     private     Stage       _stage;
     private     BorderPane  _bpane;
     private     String      _title;
@@ -150,6 +151,8 @@ public class GUI {
         // Build our GUI
         Scene me = this.build(resizable);
         
+        // Set `me` to our variabe
+        
         // Finalise our GUI
         this._hasFinalised = true;
     }
@@ -167,9 +170,22 @@ public class GUI {
         // Build our GUI
         Scene me = this.build(resizable);
         
+        // Set `me` to our variable
+        this._scene = me;
+        
         // Finalise our GUI
         this._hasFinalised = true;
         return me;
+    }
+    
+    /**
+     * @name    getScene
+     * @desc    Returns the Scene
+     * 
+     * @return  Scene
+     */
+    public Scene getScene() {
+        return this._scene;
     }
     
     /**

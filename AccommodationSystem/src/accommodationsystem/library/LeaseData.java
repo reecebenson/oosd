@@ -9,6 +9,7 @@ import accommodationsystem.library.Lease.Room;
 import accommodationsystem.library.Lease.Hall;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.scene.control.ComboBox;
 
 /**
  *
@@ -95,6 +96,7 @@ public class LeaseData {
      */
     public void setHallId(IntegerProperty hallId) {
         this.hallId = hallId;
+        this.hall = Database.getHall(this.getHallId());
     }
 
     /**
@@ -131,6 +133,7 @@ public class LeaseData {
      */
     public void setRoomNumber(IntegerProperty roomNumber) {
         this.roomNumber = roomNumber;
+        this.room = Database.getRoom(this.getHallId(), this.getFlatNumber(), this.getRoomNumber());
     }
 
     /**
