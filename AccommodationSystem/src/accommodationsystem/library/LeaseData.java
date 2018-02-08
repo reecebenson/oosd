@@ -179,6 +179,7 @@ public class LeaseData {
      */
     public void setStudentId(IntegerProperty studentId) {
         this.studentId = studentId;
+        this.student = Database.getStudentFromId(this.getStudentId());
     }
 
     /**

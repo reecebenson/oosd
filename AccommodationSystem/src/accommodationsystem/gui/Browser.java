@@ -18,6 +18,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -60,6 +61,7 @@ public class Browser extends GUI {
     
     // Table
     TableView<LeaseData> tbl = new TableView<>();
+    private int _currentHallView = -1;
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
@@ -275,7 +277,10 @@ public class Browser extends GUI {
         occupancyStatus.setCellValueFactory(new PropertyValueFactory<>("OccupiedStatus"));
         cleaningStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatusName"));
         tbl.getItems().setAll(Database.getLeases(hallNumber));
-        
+        _currentHallView = hallNumber;
+        // Sorting Order
+        leaseNumber.setSortType(TableColumn.SortType.DESCENDING);
+            
         /**
          * Compile Elements
          */
@@ -285,6 +290,9 @@ public class Browser extends GUI {
         /**
          * Style Table Elements
          */
+        // Set Sorting Order
+        tbl.getSortOrder().add(leaseNumber);
+        
         // Reset XY Size
         _size_xy = 0;
         
@@ -360,12 +368,16 @@ public class Browser extends GUI {
         /**
          * Declare Elements
          */
-        Button btnViewLease;
+        Button btnCreateLease,
+                btnViewLease,
+                btnDeleteLease;
         
         /**
          * Initialise Elements
          */
+        btnCreateLease = new Button();
         btnViewLease = new Button();
+        btnDeleteLease = new Button();
         
         /**
          * Style Elements
@@ -374,15 +386,28 @@ public class Browser extends GUI {
         footerBox.setPadding(new Insets(20, 20, 20, 20));
         footerBox.setMinHeight(100);
         footerBox.setId("actionPane");
-        // Buttons
+        // Buttons are disabled by default, waiting for user to click an element on the TableView
+        // Create Lease Button
+        btnCreateLease.setText("Create Lease");
+        btnCreateLease.setDisable(true);
+        btnCreateLease.setOnAction((ActionEvent e) -> btnCreateLease_Click(e));
+        // View Lease Button
         btnViewLease.setText("View Lease");
-        btnViewLease.setDisable(true); // Disabled by default, waiting for user to click an element on the TableView
+        btnViewLease.setDisable(true);
         btnViewLease.setOnAction((ActionEvent e) -> btnViewLease_Click(e));
+        // Delete Lease Button
+        btnDeleteLease.setText("Delete Lease");
+        btnDeleteLease.setDisable(true);
+        btnDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
         
         /**
          * Compile Elements
          */
-        footerBox.getChildren().add(btnViewLease);
+        footerBox.getChildren().addAll(btnCreateLease, btnViewLease, btnDeleteLease);
+    }
+    
+    private void btnCreateLease_Click(ActionEvent event) {
+        System.out.println("create lease");
     }
     
     private void btnViewLease_Click(ActionEvent event) {
@@ -404,6 +429,31 @@ public class Browser extends GUI {
             viewLease.initModality(Modality.APPLICATION_MODAL);
             viewLease.showAndWait();
             
+        } catch(Exception e) { }
+    }
+    
+    private void btnDeleteLease_Click(ActionEvent event) {
+        // Check if we're trying to view a lease that does not exist (should not occur)
+        if(tbl.getSelectionModel().isEmpty())
+            return;
+        
+        // Get LeaseData
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Check if our lease exists
+        if(lease.getLeaseId() == null) {
+            new Alert(Alert.AlertType.ERROR, "Unable to delete a lease that does not exist.", ButtonType.OK).show();
+            return;
+        }
+            
+        // Open our View Lease GUI
+        try {
+            Alert confirm = new Alert(Alert.AlertType.WARNING, "Are you sure you would like to delete Lease " + lease.getLeaseId(), ButtonType.NO, ButtonType.YES);
+            Optional<ButtonType> ok = confirm.showAndWait();
+            if(ok.get() == ButtonType.YES) {
+                Database.deleteLease(lease);
+                this.buildTable(_currentHallView);
+            }
         } catch(Exception e) { }
     }
     

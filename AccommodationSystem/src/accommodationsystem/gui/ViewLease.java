@@ -412,7 +412,8 @@ public class ViewLease extends GUI {
         // Check Lease ID
         if(leaseId.getText().matches("[0-9]+") && !leaseId.getText().isEmpty()) {
             tLeaseId = new SimpleIntegerProperty(Integer.valueOf(leaseId.getText()));
-            previousLeaseId = this.leaseData.getLeaseId();
+            if(this.leaseData.getLeaseId() != null)
+                previousLeaseId = this.leaseData.getLeaseId();
             this.leaseData.setLeaseId(tLeaseId);
         } else dataIsValid = false;
         
@@ -432,6 +433,11 @@ public class ViewLease extends GUI {
         if(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()).contains((int)roomNumber.getSelectionModel().getSelectedItem())) {
             tRoomNumber = new SimpleIntegerProperty((int)roomNumber.getSelectionModel().getSelectedItem());
             this.leaseData.setRoomNumber(tRoomNumber);
+        } else dataIsValid = false;
+        
+        // Set Student
+        if(newStudent != null) {
+            this.leaseData.setStudentId(new SimpleIntegerProperty(newStudent.getStudentId()));
         } else dataIsValid = false;
         
         // Check Occupancy
