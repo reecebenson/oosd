@@ -101,3 +101,7 @@
     margin-bottom: 0;
     display: table-cell;
 }
+
+#lblCleanStatus {
+    -fx-text-fill: white;
+}

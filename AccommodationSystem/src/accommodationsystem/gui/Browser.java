@@ -9,21 +9,24 @@ import accommodationsystem.bases.GUI;
 import accommodationsystem.library.User;
 import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
 import java.util.Optional;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -61,10 +64,15 @@ public class Browser extends GUI {
     
     // Table
     TableView<LeaseData> tbl = new TableView<>();
+    Button btnCreateLease,
+            btnViewLease,
+            btnDeleteLease;
+    ComboBox comboChangeCleanStatus;
     private int _currentHallView = -1;
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
+    private boolean justSelectedNewItem = false;
     
     /**
      * @name    buildHeader
@@ -223,6 +231,64 @@ public class Browser extends GUI {
     }
     
     /**
+     * @name    cbCleanStatus_Changed
+     * @desc    Handles when the ComboBox value changes
+     * @param   cb
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void cbCleanStatus_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check to see if we've just clicked another item
+         */
+        /*if(justSelectedNewItem) {
+            justSelectedNewItem = false;
+            return;
+        }*/
+        
+        /**
+         * Cast Objects to Strings
+         */
+        String oldVal = (String)oldValue;
+        String newVal = (String)newValue;
+        
+        // Debug
+        AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + comboChangeCleanStatus.getSelectionModel().getSelectedIndex());
+        
+        // Check if we're trying to view a lease that does not exist (should not occur)
+        if(tbl.getSelectionModel().isEmpty())
+            return;
+        
+        // Get LeaseData
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Check ComboBox Data
+         */
+        if(!User.hasPermission(Permissions.MANAGE_OFFLINE) && newVal.equals("Offline")) {
+            justSelectedNewItem = true;
+            new Alert(Alert.AlertType.ERROR, "You do not have permissions to set a lease status to Offline.", ButtonType.OK).showAndWait();
+            Platform.runLater(() -> comboChangeCleanStatus.setValue(lease.getCleanStatusName()));
+        } else {
+            // Check if trying to set Lease to Offline when lease is present
+            if(newVal.equals("Offline") && lease.getLeaseId() != null) {
+                new Alert(Alert.AlertType.ERROR, "Cannot set lease status to Offline when a lease is present.", ButtonType.OK).showAndWait();
+                Platform.runLater(() -> comboChangeCleanStatus.setValue(lease.getCleanStatusName()));
+            } else {
+                /**
+                * Update Lease Data
+                */
+               if(!lease.getCleanStatusName().equals(newVal)) {
+                   lease.setCleanStatus(new SimpleIntegerProperty((int)CleaningStatus.getId((String)newVal)));
+                   Database.updateRoom(lease);
+                   this.buildTable(_currentHallView);
+               }
+            }
+        }
+    }
+    
+    /**
      * @name    buildTable
      * @desc    Create the Table of the "Browser" GUI
      * 
@@ -321,20 +387,44 @@ public class Browser extends GUI {
     
     private void tbl_Select(Object obs, Object oldSelection, Object newSelection) {
         // Enable or Disable our Footer Buttons
-        footerBox.getChildren().stream().forEach((Node n) -> {
-            if(n instanceof Button) {
-                Button b = (Button)n;
-                b.setDisable((newSelection == null));
+        footerBox.getChildren().stream().forEach((Node o) -> {
+            if(o instanceof HBox) {
+                HBox pane = (HBox)o;
+                
+                pane.getChildren().stream().forEach((Node n) -> {
+                    if(n instanceof Button) {
+                        Button b = (Button)n;
+                        b.setDisable((newSelection == null));
+                    } else if(n instanceof ComboBox) {
+                        ComboBox cb = (ComboBox)n;
+                        cb.setDisable((newSelection == null));
+                    }
+                });
             }
         });
         
-        // Stop execution of code if we have nothing selected
-        if(newSelection == null)
-            return;
-        
         // Get our selected item
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Check if lease is valid
+        if(lease == null) return;
+        
+        // Debug
         AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());
+        
+        // Check if our lease exists
+        btnCreateLease.setText((lease.getLeaseId() == null ? "Create Lease" : "Update Lease"));
+        
+        // Update Clean Button
+        btnCreateLease.setDisable((lease.getCleanStatusName().equals("Offline") && lease.getLeaseId() == null));
+        btnDeleteLease.setDisable((lease.getCleanStatusName().equals("Offline") || lease.getLeaseId() == null));
+        
+        // Modify our flag
+        justSelectedNewItem = true;
+        
+        // Update ComboBox
+        comboChangeCleanStatus.setValue(lease.getCleanStatusName());
+        comboChangeCleanStatus.setDisable(lease.getCleanStatusName().equals("Offline") && !User.hasPermission(Permissions.MANAGE_OFFLINE));
     }
     
     /**
@@ -368,16 +458,19 @@ public class Browser extends GUI {
         /**
          * Declare Elements
          */
-        Button btnCreateLease,
-                btnViewLease,
-                btnDeleteLease;
+        HBox leftBox, rightBox;
+        Label lblChangeCleanStatus;
         
         /**
          * Initialise Elements
          */
+        leftBox = new HBox(15);
+        rightBox = new HBox(15);
         btnCreateLease = new Button();
         btnViewLease = new Button();
         btnDeleteLease = new Button();
+        comboChangeCleanStatus = new ComboBox(CleaningStatus.getStatuses());
+        lblChangeCleanStatus = new Label();
         
         /**
          * Style Elements
@@ -386,6 +479,8 @@ public class Browser extends GUI {
         footerBox.setPadding(new Insets(20, 20, 20, 20));
         footerBox.setMinHeight(100);
         footerBox.setId("actionPane");
+        leftBox.setAlignment(Pos.CENTER_LEFT);
+        rightBox.setAlignment(Pos.CENTER_RIGHT);
         // Buttons are disabled by default, waiting for user to click an element on the TableView
         // Create Lease Button
         btnCreateLease.setText("Create Lease");
@@ -399,15 +494,59 @@ public class Browser extends GUI {
         btnDeleteLease.setText("Delete Lease");
         btnDeleteLease.setDisable(true);
         btnDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
+        // Button Area
+        leftBox.getChildren().add(btnViewLease);
+        if(User.hasPermission(Permissions.EDIT_LEASE)) leftBox.getChildren().addAll(btnCreateLease, btnDeleteLease);
+        // ComboBoxes
+        comboChangeCleanStatus.setStyle("-fx-text-fill: white");
+        comboChangeCleanStatus.setPadding(new Insets(11, 5, 11, 5));
+        comboChangeCleanStatus.setValue("Clean");
+        comboChangeCleanStatus.setPrefWidth(150.0);
+        comboChangeCleanStatus.setDisable(true);
+        comboChangeCleanStatus.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> cbCleanStatus_Changed(options, oldValue, newValue));
+        // Change Clean Status Label
+        lblChangeCleanStatus.setText("Clean Status");
+        lblChangeCleanStatus.setId("lblCleanStatus");
+        lblChangeCleanStatus.setPadding(new Insets(20, 20, 20, 20));
+        // Change Clean Status Area
+        rightBox.getChildren().addAll(lblChangeCleanStatus, comboChangeCleanStatus);
+        // Spacer
+        Region footerSpacer = new Region();
+        footerSpacer.setPrefWidth(175);
+        HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         
         /**
          * Compile Elements
          */
-        footerBox.getChildren().addAll(btnCreateLease, btnViewLease, btnDeleteLease);
+        footerBox.getChildren().addAll(leftBox, footerSpacer, rightBox);
     }
     
     private void btnCreateLease_Click(ActionEvent event) {
-        System.out.println("create lease");
+        // Check if we're trying to view a lease that does not exist (should not occur)
+        if(tbl.getSelectionModel().isEmpty())
+            return;
+        
+        // Get LeaseData
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Open our View Lease GUI
+        try {
+            // Verify Lease Cleaning Status
+            if(lease.getCleanStatusName().equals("Offline")) {
+                new Alert(Alert.AlertType.ERROR, "Cannot create a lease when the room status is Offline.", ButtonType.OK).show();
+                return;
+            }
+            
+            Integer leaseId = lease.getLeaseId();
+            AccommodationSystem.debug("Creating Lease: " + (leaseId == null ? 0 : leaseId));
+            
+            // Modal
+            Stage viewLease = new ViewLease(this, lease, (btnCreateLease.textProperty().get().equals("Create Lease") ? "create" : "update")).getStage();
+            viewLease.initOwner(this.getScene().getWindow());
+            viewLease.initModality(Modality.APPLICATION_MODAL);
+            viewLease.showAndWait();
+            
+        } catch(Exception e) { }
     }
     
     private void btnViewLease_Click(ActionEvent event) {
@@ -424,7 +563,7 @@ public class Browser extends GUI {
             AccommodationSystem.debug("Viewing Lease: " + (leaseId == null ? 0 : leaseId));
             
             // Modal
-            Stage viewLease = new ViewLease(this, lease).getStage();
+            Stage viewLease = new ViewLease(this, lease, "view").getStage();
             viewLease.initOwner(this.getScene().getWindow());
             viewLease.initModality(Modality.APPLICATION_MODAL);
             viewLease.showAndWait();
@@ -492,7 +631,7 @@ public class Browser extends GUI {
             Node source = e.getPickResult().getIntersectedNode();
             
             // Move up through Node Hierachy until something other than a TableRow or Button is present
-            while(source != null && !(source instanceof TableRow) && !(source instanceof Button))
+            while(source != null && !(source instanceof TableRow) && !(source instanceof Button) && !(source instanceof ComboBox))
                 // Recursively get the parent of the Node until condition is met
                 source = source.getParent();
             

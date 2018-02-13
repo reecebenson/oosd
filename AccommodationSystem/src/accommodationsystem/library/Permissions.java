@@ -24,6 +24,8 @@ public class Permissions {
      * Permissions
      */
     public static final String LOGIN = "LOGIN";
+    public static final String MANAGE_OFFLINE = "MANAGE_OFFLINE";
+    public static final String MANAGE_LEASES = "MANAGE_LEASES";
     public static final String VIEW_LEASES = "VIEW_LEASES";
     public static final String UPDATE_LEASES = "UPDATE_LEASES";
     public static final String DELETE_LEASE = "DELETE_LEASE";

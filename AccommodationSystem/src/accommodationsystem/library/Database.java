@@ -283,7 +283,33 @@ public class Database {
         return studentList;
     }
     
-    public static ObservableList<String> getStudentsAsCollection() {
+    public static List<Student> getAssignedStudents() {
+        // Get list of students assigned to a lease
+        List<LeaseData> leases = Database.getLeases(0);
+        List<Student> occupiedStudents = new ArrayList<>();
+        leases.forEach((l) -> {
+            if(l.getOccupied()) {
+                if(l.getStudentId() != null)
+                    occupiedStudents.add(l.getStudent());
+            }
+        });
+        return occupiedStudents;
+    }
+    
+    public static List<Integer> getAssignedStudentsIds() {
+        // Get list of students assigned to a lease
+        List<LeaseData> leases = Database.getLeases(0);
+        List<Integer> occupiedStudents = new ArrayList<>();
+        leases.forEach((l) -> {
+            if(l.getOccupied()) {
+                if(l.getStudentId() != null)
+                    occupiedStudents.add(l.getStudentId());
+            }
+        });
+        return occupiedStudents;
+    }
+    
+    public static ObservableList<String> getStudentsAsCollection(boolean allStudents) {
         // Check if user is logged in
         if(!User.loggedIn())
             return FXCollections.observableArrayList();
@@ -294,8 +320,16 @@ public class Database {
         // Check User Permissions
         if(User.hasPermission(Permissions.VIEW_LEASES))
         {
+            List<Integer> assignedStudents = Database.getAssignedStudentsIds();
+            
+            // Filter Students
             for(StudentRow s: Database.getStudentsAsRow()) {
-                studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
+                if(allStudents)
+                    studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
+                else {
+                    if(!assignedStudents.contains(s.getId()))
+                        studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
+                }
             }
         }
         
@@ -394,7 +428,7 @@ public class Database {
     
     public static Student getStudentFromId(Integer studentId) {
         // Check if user is logged in
-        if(!User.loggedIn() || studentId == null || studentId == 0)
+        if(!User.loggedIn() || studentId == null)
             return null;
         
         // Initialise Leases List
@@ -495,6 +529,80 @@ public class Database {
         return false;
     }
     
+    public static boolean updateRoom(LeaseData lease) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Update Cleaning Status
+        boolean updateComplete = false;
+        PreparedStatement prepStatement = null;
+        String query2 = "UPDATE `rooms` SET `clean_status` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+
+        try {
+            prepStatement = Database._conn.prepareStatement(query2);
+            prepStatement.setInt(1, lease.getCleanStatus());
+            prepStatement.setInt(2, lease.getRoom().getRoomId());
+            prepStatement.setInt(3, lease.getRoom().getFlatId());
+            prepStatement.setInt(4, lease.getRoom().getHallId());
+            prepStatement.executeUpdate();
+            updateComplete = true;
+        } catch(SQLException ex) {
+            AccommodationSystem.debug(ex.getMessage());
+            updateComplete = false;
+        } finally {
+            try {
+                if(prepStatement != null) prepStatement.close();
+            }catch(Exception x) {}
+        }
+        
+        return updateComplete;
+    }
+    
+    public static boolean updateLeaseData(LeaseData lease) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Update Lease
+        boolean updateComplete = false;
+        PreparedStatement prepStatement = null, prepStatement2 = null;
+        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+        String query3 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+
+        try {
+            prepStatement = Database._conn.prepareStatement(query);
+            prepStatement.setInt(1, lease.getLeaseId());
+            prepStatement.setInt(2, lease.getStudent().getStudentId());
+            prepStatement.setInt(3, lease.getRoom().getRoomId());
+            prepStatement.setInt(4, lease.getRoom().getFlatId());
+            prepStatement.setInt(5, lease.getRoom().getHallId());
+            prepStatement.setInt(6, lease.getRoom().getRoomId());
+            prepStatement.setInt(7, lease.getRoom().getFlatId());
+            prepStatement.setInt(8, lease.getRoom().getHallId());
+            prepStatement.executeUpdate();
+
+            prepStatement2 = Database._conn.prepareStatement(query3);
+            prepStatement2.setInt(1, lease.getOccupied() ? 1 : 0);
+            prepStatement2.setInt(2, lease.getRoom().getRoomId());
+            prepStatement2.setInt(3, lease.getRoom().getFlatId());
+            prepStatement2.setInt(4, lease.getRoom().getHallId());
+            prepStatement2.executeUpdate();
+
+            updateComplete = true;
+        } catch(SQLException ex) {
+            AccommodationSystem.debug(ex.getMessage());
+            updateComplete = false;
+        } finally {
+            try {
+                if(prepStatement != null) prepStatement.close();
+                if(prepStatement2 != null) prepStatement2.close();
+            }catch(Exception x) {}
+        }
+        
+        return updateComplete;
+    }
+    
     public static boolean updateLease(LeaseData lease) {
         // Check if user is logged in
         if(!User.loggedIn())
@@ -505,68 +613,17 @@ public class Database {
         
         // Check User Permissions
         if(User.hasPermission(Permissions.EDIT_LEASE)) {
-            // Update Lease
-            PreparedStatement prepStatement = null, prepStatement3 = null;
-            String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
-            String query3 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
-            
-            try {
-                prepStatement = Database._conn.prepareStatement(query);
-                prepStatement.setInt(1, lease.getLeaseId());
-                prepStatement.setInt(2, lease.getStudent().getStudentId());
-                prepStatement.setInt(3, lease.getRoom().getRoomId());
-                prepStatement.setInt(4, lease.getRoom().getFlatId());
-                prepStatement.setInt(5, lease.getRoom().getHallId());
-                prepStatement.setInt(6, lease.getRoom().getRoomId());
-                prepStatement.setInt(7, lease.getRoom().getFlatId());
-                prepStatement.setInt(8, lease.getRoom().getHallId());
-                prepStatement.executeUpdate();
-                
-                prepStatement3 = Database._conn.prepareStatement(query3);
-                prepStatement3.setInt(1, lease.getOccupied() ? 1 : 0);
-                prepStatement3.setInt(2, lease.getRoom().getRoomId());
-                prepStatement3.setInt(3, lease.getRoom().getFlatId());
-                prepStatement3.setInt(4, lease.getRoom().getHallId());
-                prepStatement3.executeUpdate();
-                
-                updateComplete = true;
-            } catch(SQLException ex) {
-                AccommodationSystem.debug(ex.getMessage());
-                updateComplete = false;
-            } finally {
-                try {
-                    if(prepStatement != null) prepStatement.close();
-                    if(prepStatement3 != null) prepStatement3.close();
-                }catch(Exception x) {}
-            }
-        } else AccommodationSystem.debug("User does not have permission for 'UPDATE_LEASES'");
-        
-        // Check if the first part has been successful
-        if(!updateComplete) return updateComplete;
+            System.out.println("UPDATELEASE: lease data -> " + lease.getStudent().getFirstName());
+            updateComplete = updateLeaseData(lease);
+            System.out.println("UPDATELEASE: lease data (after update) -> " + lease.getStudent().getFirstName());
+        } else AccommodationSystem.debug("User does not have permission for 'EDIT_LEASE'");
         
         // Check User Permissions
         if(User.hasPermission(Permissions.EDIT_CLEAN)) {
-            // Update Cleaning Status
-            PreparedStatement prepStatement2 = null;
-            String query2 = "UPDATE `rooms` SET `clean_status` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
-            
-            try {
-                prepStatement2 = Database._conn.prepareStatement(query2);
-                prepStatement2.setInt(1, lease.getCleanStatus());
-                prepStatement2.setInt(2, lease.getRoom().getRoomId());
-                prepStatement2.setInt(3, lease.getRoom().getFlatId());
-                prepStatement2.setInt(4, lease.getRoom().getHallId());
-                prepStatement2.executeUpdate();
-                updateComplete = true;
-            } catch(SQLException ex) {
-                AccommodationSystem.debug(ex.getMessage());
-                updateComplete = false;
-            } finally {
-                try {
-                    if(prepStatement2 != null) prepStatement2.close();
-                }catch(Exception x) {}
-            }
-        } else AccommodationSystem.debug("User does not have permission for 'UPDATE_LEASES'");
+            System.out.println("UPDATECLEAN: lease data -> " + lease.getStudent().getFirstName());
+            updateComplete = updateRoom(lease);
+            System.out.println("UPDATECLEAN: lease data (after update) -> " + lease.getStudent().getFirstName());
+        } else AccommodationSystem.debug("User does not have permission for 'EDIT_CLEAN'");
         
         if(updateComplete)
             new Alert(Alert.AlertType.INFORMATION, "Lease successfully updated.", ButtonType.OK).showAndWait();
@@ -575,9 +632,13 @@ public class Database {
     
  //*   > check Lease Number when updating lease to check that the Lease Number does not already exist*/
     
-    public static boolean checkValidLeaseNumber(int leaseId) {
+    public static boolean checkValidLeaseNumber(Integer leaseId) {
         // Check if user is logged in
         if(!User.loggedIn())
+            return false;
+        
+        // Check valid Lease ID
+        if(leaseId == null)
             return false;
         
         // Prepare SQL Statement
