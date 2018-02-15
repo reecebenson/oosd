@@ -13,6 +13,7 @@ import accommodationsystem.library.Table.StudentRow;
 import accommodationsystem.library.Table.UserRow;
 import java.sql.*;
 import static java.sql.Types.NULL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -499,36 +500,6 @@ public class Database {
         return userPermissions;
     }
     
-    
- //*   > able to edit Lease Number and Student Name
- //*   > able to edit the occupancy state
-    
-    public static boolean updateRoom(int roomId, int flatId, int hallId, int occupancy, int cleaningStatus) {
-        // Check if user is logged in
-        if(!User.loggedIn())
-            return false;
-        
-        // Check User Permissions
-        if(User.hasPermission(Permissions.VIEW_LEASES)) {
-            // Update Lease
-            PreparedStatement prepStatement = null;
-            ResultSet resultSet = null;
-            String query;
-            
-            // Check User Permissions
-            if(User.hasPermission(Permissions.EDIT_LEASE) && User.hasPermission(Permissions.EDIT_CLEAN)) {
-                query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
-            } else if(User.hasPermission(Permissions.EDIT_LEASE)) {
-                query = "";
-            } else if(User.hasPermission(Permissions.EDIT_CLEAN)) {
-                query = "";
-            }
-            
-            // do stuff, bind params ^^^^
-        }
-        return false;
-    }
-    
     public static boolean updateRoom(LeaseData lease) {
         // Check if user is logged in
         if(!User.loggedIn())
@@ -567,7 +538,7 @@ public class Database {
         // Update Lease
         boolean updateComplete = false;
         PreparedStatement prepStatement = null, prepStatement2 = null;
-        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ?, `lease_startdate` = ?, `lease_enddate` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
         String query3 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
 
         try {
@@ -577,9 +548,11 @@ public class Database {
             prepStatement.setInt(3, lease.getRoom().getRoomId());
             prepStatement.setInt(4, lease.getRoom().getFlatId());
             prepStatement.setInt(5, lease.getRoom().getHallId());
-            prepStatement.setInt(6, lease.getRoom().getRoomId());
-            prepStatement.setInt(7, lease.getRoom().getFlatId());
-            prepStatement.setInt(8, lease.getRoom().getHallId());
+            prepStatement.setLong(6, Instant.now().getEpochSecond());
+            prepStatement.setLong(7, Instant.now().getEpochSecond() + ((3600 * 24) * 365));
+            prepStatement.setInt(8, lease.getRoom().getRoomId());
+            prepStatement.setInt(9, lease.getRoom().getFlatId());
+            prepStatement.setInt(10, lease.getRoom().getHallId());
             prepStatement.executeUpdate();
 
             prepStatement2 = Database._conn.prepareStatement(query3);

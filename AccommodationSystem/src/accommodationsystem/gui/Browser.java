@@ -25,15 +25,19 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -60,7 +64,7 @@ public class Browser extends GUI {
     // Panes
     HBox headerBox = new HBox();
     ScrollPane middleBox = new ScrollPane();
-    FlowPane footerBox = new FlowPane(Orientation.HORIZONTAL, 15, 15);
+    HBox footerBox = new HBox();
     
     // Table
     TableView<LeaseData> tbl = new TableView<>();
@@ -69,6 +73,14 @@ public class Browser extends GUI {
             btnDeleteLease;
     ComboBox comboChangeCleanStatus;
     private int _currentHallView = -1;
+    
+    // Table Context Menu
+    ContextMenu rightClickMenu;
+    MenuItem miViewLease,
+            miEditLease,
+            miDeleteLease,
+            miCheckLeaseDuration,
+            miViewStudent;
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
@@ -288,6 +300,10 @@ public class Browser extends GUI {
         }
     }
     
+    private void tbl_RightClicked(MouseEvent e) {
+        
+    }
+    
     /**
      * @name    buildTable
      * @desc    Create the Table of the "Browser" GUI
@@ -302,6 +318,38 @@ public class Browser extends GUI {
         if(super.hasFinalised()) {
             tbl.getItems().clear();
             tbl.getColumns().clear();
+        } else {
+            /**
+             * Build Context Menu
+             */
+            SeparatorMenuItem miSeparator = new SeparatorMenuItem();
+            
+            /**
+             * Initialise Context Menu
+             */
+            rightClickMenu = new ContextMenu();
+            miViewLease = new MenuItem("View Lease");
+            miEditLease = new MenuItem("Edit Lease");
+            miDeleteLease = new MenuItem("Delete Lease");
+            miCheckLeaseDuration = new MenuItem("Check Lease Duration");
+            miViewStudent = new MenuItem("View Student");
+            rightClickMenu.getItems().addAll(miViewLease, miEditLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent);
+            
+            /**
+             * Menu Item Listeners
+             */
+            miViewLease.setOnAction((ActionEvent e) -> btnViewLease_Click(e));
+            miEditLease.setOnAction((ActionEvent e) -> btnCreateLease_Click(e));
+            miDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
+            miCheckLeaseDuration.setOnAction((ActionEvent e) -> mi_CheckLeaseDuration(e));
+            miViewStudent.setOnAction((ActionEvent e) -> mi_ViewStudent(e));
+            
+            
+            /**
+             * Table Listeners
+             */
+            tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
+            tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
         }
         
         /**
@@ -329,11 +377,6 @@ public class Browser extends GUI {
         /**
          * Set Table Properties
          */
-        // Table Listeners
-        if(!super.hasFinalised()) {
-            tbl.setOnMouseClicked((MouseEvent e) -> tbl_Click(e));
-            tbl.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> tbl_Select(obs, oldSelection, newSelection));
-        }
         // Cell Value Factory
         leaseNumber.setCellValueFactory(new PropertyValueFactory<>("LeaseId"));
         hallName.setCellValueFactory(new PropertyValueFactory<>("HallName"));
@@ -383,7 +426,37 @@ public class Browser extends GUI {
         if(event.getClickCount() >= 2) {
             btnViewLease_Click(null);
         }
+        
+        // Check if we've right clicked
+        if(event.getButton() == MouseButton.SECONDARY) {
+            rightClickMenu.show(tbl, event.getScreenX(), event.getScreenY());
+        }
     }
+    
+    private void mi_CheckLeaseDuration(ActionEvent e) {
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Check Lease Status
+        if(lease == null) return;
+        
+        // Show Alert (Message)
+        Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, "Start Date: {}\nEnd Date:\n\nThis lease has {} months, {} days, {} hours and {} seconds.", ButtonType.OK);
+        checkLeaseDur.showAndWait();
+    }
+    
+    private void mi_ViewStudent(ActionEvent e) {
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Check Lease Status
+        if(lease == null) return;
+        
+        // Show Alert (Message)
+        Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, "Student ID: {}\nStudent Name: {}\n\n{} lives in Room {}, Flat {}, {}.", ButtonType.OK);
+        viewStudentInfo.showAndWait();
+    }
+    
     
     private void tbl_Select(Object obs, Object oldSelection, Object newSelection) {
         // Enable or Disable our Footer Buttons
@@ -512,7 +585,7 @@ public class Browser extends GUI {
         rightBox.getChildren().addAll(lblChangeCleanStatus, comboChangeCleanStatus);
         // Spacer
         Region footerSpacer = new Region();
-        footerSpacer.setPrefWidth(175);
+        footerSpacer.setPrefWidth(150);
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         
         /**

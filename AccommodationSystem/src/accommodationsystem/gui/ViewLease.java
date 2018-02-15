@@ -186,6 +186,7 @@ public class ViewLease extends GUI {
         studentName.setValue(this.leaseData.getStudent() != null ? this.leaseData.getStudent().getStudentId() + ": " + this.leaseData.getStudentName() : "");
         studentName.setPrefWidth(225.0);
         studentName.setPadding(new Insets(11, 5, 11, 5));
+        studentName.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> studentName_Changed(options, oldValue, newValue));
         // occupancy ComboBox
         occupancy.setStyle("-fx-text-fill: white");
         occupancy.setValue(this.leaseData.getOccupiedStatus());
@@ -426,6 +427,34 @@ public class ViewLease extends GUI {
         btnUpdate.setDisable(false);
     }
     
+    /**
+     * @name    studentName_Changed
+     * @desc    Handles when the ComboBox value changes
+     * 
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
+    private void studentName_Changed(Object options, Object oldValue, Object newValue) {
+        /**
+         * Check if values are null to avoid errors
+         */
+        if(newValue == null) return;
+        
+        /**
+         * Cast Objects to Strings
+         */
+        String newVal = (String)newValue;
+        
+        /**
+         * Debug
+         */
+        AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
+        
+        // Update Occupancy State
+        occupancy.setValue("Occupied");
+    }
+    
     private void btnUpdate_Click(ActionEvent event, String showType) {
         // Check our show type
         if(showType.equals("view")) {
@@ -438,10 +467,7 @@ public class ViewLease extends GUI {
         // Get Student Data
         String studentNameData = (String)studentName.getSelectionModel().getSelectedItem();
         Integer studentId = Integer.valueOf(studentNameData.split(":")[0]);
-        System.out.println("Student Name Data: " + studentNameData + " | Student ID: " + studentId);
-        System.out.println("getting student from id: " + studentId);
         Student newStudent = Database.getStudentFromId(studentId);
-        System.out.println(newStudent.getFirstName() + " | " + newStudent.getLastName() + " | " + newStudent.getStudentId());
         
         // Variables
         Integer previousLeaseId = (this.leaseData.getLeaseId() != null ? this.leaseData.getLeaseId() : null);
@@ -457,7 +483,7 @@ public class ViewLease extends GUI {
         
         // Validate and Sanitise inputs
         SimpleIntegerProperty tLeaseId, tHallId, tFlatNumber, tRoomNumber, tOccupiedState, tCleanStatus;
-        tLeaseId = tHallId = tFlatNumber = tRoomNumber = tOccupiedState = tCleanStatus = null;
+        tOccupiedState = null;
         boolean dataIsValid = true;
         
         // Check User Permissions
@@ -496,10 +522,7 @@ public class ViewLease extends GUI {
 
             // Set Student
             if(newStudent != null) {
-                System.out.println("set student id, current: " + this.leaseData.getStudentId());
                 this.leaseData.setStudentId(new SimpleIntegerProperty(newStudent.getStudentId()));
-                System.out.println("set student id, new: " + this.leaseData.getStudentId());
-                System.out.println(this.leaseData.getStudent().getFirstName() + " " + this.leaseData.getStudent().getLastName());
                 
                 // Check occupancy
                 if(tOccupiedState != null && tOccupiedState.intValue() == Occupancy.getId("Unoccupied")) {
