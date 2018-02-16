@@ -411,7 +411,7 @@ public class Database {
                 }
 
                 while(resultSet.next()) {
-                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id")));
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("lease_startdate"), resultSet.getInt("lease_enddate")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());

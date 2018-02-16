@@ -9,7 +9,6 @@ import accommodationsystem.library.Lease.Room;
 import accommodationsystem.library.Lease.Hall;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.scene.control.ComboBox;
 
 /**
  *
@@ -25,7 +24,9 @@ public class LeaseData {
             leaseId,
             studentId,
             occupied,
-            cleanStatus;
+            cleanStatus,
+            startDate,
+            endDate;
     private Student student;
     private Hall hall;
     private Room room;
@@ -46,13 +47,15 @@ public class LeaseData {
      * @param   leaseId
      * @param   studentId
      */
-    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId) {
+    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId, Integer startDate, Integer endDate) {
         // Populate LeaseData
         this.hallId = new SimpleIntegerProperty(hallId);
         this.flatNumber = new SimpleIntegerProperty(flatNumber);
         this.roomNumber = new SimpleIntegerProperty(roomNumber);
         this.leaseId = new SimpleIntegerProperty(leaseId);
         this.studentId = new SimpleIntegerProperty(studentId);
+        this.startDate = new SimpleIntegerProperty(startDate);
+        this.endDate = new SimpleIntegerProperty(endDate);
         
         // Populate Student, Hall & CleaningStatus Objects
         this.student = Database.getStudentFromId(studentId);
@@ -261,5 +264,23 @@ public class LeaseData {
      */
     public Room getRoom() {
         return room;
+    }
+
+    /**
+     * @name    getStartDate
+     * @desc    Retrieve Lease Start Date
+     * @return  IntegerProperty
+     */
+    public Integer getStartDate() {
+        return startDate.intValue();
+    }
+
+    /**
+     * @name    getEndDate
+     * @desc    Retrieve Lease End Date
+     * @return  IntegerProperty
+     */
+    public Integer getEndDate() {
+        return endDate.intValue();
     }
 }

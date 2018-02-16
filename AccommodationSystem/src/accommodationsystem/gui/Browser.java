@@ -13,6 +13,7 @@ import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
+import java.text.MessageFormat;
 import java.util.Optional;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -440,8 +441,21 @@ public class Browser extends GUI {
         // Check Lease Status
         if(lease == null) return;
         
+        // Get Lease Information
+        String startDate = new java.util.Date((long)lease.getStartDate()*1000).toString();
+        String endDate = new java.util.Date((long)lease.getEndDate()*1000).toString();
+        int currentTime = (int)Math.floor(System.currentTimeMillis() / 1000);
+        int totalSecondsLeft = (lease.getEndDate() - currentTime);
+        int weeks = totalSecondsLeft / 604800;
+        int days = (totalSecondsLeft % 604800) / 86400;
+        int hours = ((totalSecondsLeft % 604800) % 86400) / 3600;
+        int minutes = (((totalSecondsLeft % 604800) % 86400) % 3600) / 60;
+        int seconds = (((totalSecondsLeft % 604800) % 86400) % 3600) % 60;
+        
         // Show Alert (Message)
-        Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, "Start Date: {}\nEnd Date:\n\nThis lease has {} months, {} days, {} hours and {} seconds.", ButtonType.OK);
+        String m = MessageFormat.format("Start Date: {0}\nEnd Date: {1}\n\nThis lease has {2} weeks, {3} days, {4} hours, {5} minutes and {6} seconds remaining.",
+                startDate, endDate, weeks, days, hours, minutes, seconds);
+        Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         checkLeaseDur.showAndWait();
     }
     
