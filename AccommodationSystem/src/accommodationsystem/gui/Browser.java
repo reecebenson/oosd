@@ -439,7 +439,10 @@ public class Browser extends GUI {
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
         // Check Lease Status
-        if(lease == null) return;
+        if(lease.getLeaseId() == null) {
+            new Alert(Alert.AlertType.ERROR, "Cannot check lease duration for a lease that does not exist.", ButtonType.OK).showAndWait();
+            return;
+        }
         
         // Get Lease Information
         String startDate = new java.util.Date((long)lease.getStartDate()*1000).toString();
@@ -464,7 +467,10 @@ public class Browser extends GUI {
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
         // Check Lease Status
-        if(lease == null) return;
+        if(lease.getLeaseId() == null) {
+            new Alert(Alert.AlertType.ERROR, "Cannot view student for a lease that does not exist.", ButtonType.OK).showAndWait();
+            return;
+        }
         
         // Show Alert (Message)
         Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, "Student ID: {}\nStudent Name: {}\n\n{} lives in Room {}, Flat {}, {}.", ButtonType.OK);
