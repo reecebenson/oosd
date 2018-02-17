@@ -78,7 +78,7 @@ public class Browser extends GUI {
     // Table Context Menu
     ContextMenu rightClickMenu;
     MenuItem miViewLease,
-            miEditLease,
+            miUpdateLease,
             miDeleteLease,
             miCheckLeaseDuration,
             miViewStudent;
@@ -330,21 +330,20 @@ public class Browser extends GUI {
              */
             rightClickMenu = new ContextMenu();
             miViewLease = new MenuItem("View Lease");
-            miEditLease = new MenuItem("Edit Lease");
+            miUpdateLease = new MenuItem("Update Lease");
             miDeleteLease = new MenuItem("Delete Lease");
             miCheckLeaseDuration = new MenuItem("Check Lease Duration");
             miViewStudent = new MenuItem("View Student");
-            rightClickMenu.getItems().addAll(miViewLease, miEditLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent);
+            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent);
             
             /**
              * Menu Item Listeners
              */
             miViewLease.setOnAction((ActionEvent e) -> btnViewLease_Click(e));
-            miEditLease.setOnAction((ActionEvent e) -> btnCreateLease_Click(e));
+            miUpdateLease.setOnAction((ActionEvent e) -> btnCreateLease_Click(e));
             miDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
             miCheckLeaseDuration.setOnAction((ActionEvent e) -> mi_CheckLeaseDuration(e));
             miViewStudent.setOnAction((ActionEvent e) -> mi_ViewStudent(e));
-            
             
             /**
              * Table Listeners
@@ -444,20 +443,13 @@ public class Browser extends GUI {
             return;
         }
         
-        // Get Lease Information
-        String startDate = new java.util.Date((long)lease.getStartDate()*1000).toString();
-        String endDate = new java.util.Date((long)lease.getEndDate()*1000).toString();
-        int currentTime = (int)Math.floor(System.currentTimeMillis() / 1000);
-        int totalSecondsLeft = (lease.getEndDate() - currentTime);
-        int weeks = totalSecondsLeft / 604800;
-        int days = (totalSecondsLeft % 604800) / 86400;
-        int hours = ((totalSecondsLeft % 604800) % 86400) / 3600;
-        int minutes = (((totalSecondsLeft % 604800) % 86400) % 3600) / 60;
-        int seconds = (((totalSecondsLeft % 604800) % 86400) % 3600) % 60;
+        /**
+         * Rollback to Commit #341dec8d88edba7de831ba911629c8d40669b06a for Lease Duration in seconds
+         * Changed to Lease Duration for "Months"
+         */
         
-        // Show Alert (Message)
-        String m = MessageFormat.format("Start Date: {0}\nEnd Date: {1}\n\nThis lease has {2} weeks, {3} days, {4} hours, {5} minutes and {6} seconds remaining.",
-                startDate, endDate, weeks, days, hours, minutes, seconds);
+        // Show Alert (Message) - getLeaseId() is formatted to a String to avoid the Message Formatter adding commas
+        String m = MessageFormat.format("The duration of Lease #{0} is {1} months.", lease.getLeaseId().toString(), lease.getDuration());
         Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         checkLeaseDur.showAndWait();
     }
@@ -496,17 +488,30 @@ public class Browser extends GUI {
             }
         });
         
+        // Enable or Disable our Right Click Menu Items
+        rightClickMenu.getItems().stream().forEach((MenuItem i) -> {
+            i.setDisable((newSelection == null));
+        });
+        
         // Get our selected item
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
         // Check if lease is valid
         if(lease == null) return;
         
+        // Enable or Disable our Right Click Menu Items
+        miViewLease.setDisable(false);
+        miUpdateLease.setDisable((lease.getLeaseId() == null && lease.getCleanStatusName().equals("Offline")));
+        miDeleteLease.setDisable((lease.getLeaseId() == null));
+        miCheckLeaseDuration.setDisable((lease.getLeaseId() == null));
+        miViewStudent.setDisable((lease.getLeaseId() == null));
+        
         // Debug
         AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());
         
         // Check if our lease exists
         btnCreateLease.setText((lease.getLeaseId() == null ? "Create Lease" : "Update Lease"));
+        miUpdateLease.setText((lease.getLeaseId() == null ? "Create Lease" : "Update Lease"));
         
         // Update Clean Button
         btnCreateLease.setDisable((lease.getCleanStatusName().equals("Offline") && lease.getLeaseId() == null));
@@ -731,6 +736,9 @@ public class Browser extends GUI {
             // Check if the selected Node is null, or if a TableRow is selected but however empty, clear the selection
             if(source == null || (source instanceof TableRow && ((TableRow) source).isEmpty()))
                 tbl.getSelectionModel().clearSelection();
+            
+            // Close Right Click menu
+            rightClickMenu.hide();
         });
     }
     

@@ -25,8 +25,7 @@ public class LeaseData {
             studentId,
             occupied,
             cleanStatus,
-            startDate,
-            endDate;
+            duration;
     private Student student;
     private Hall hall;
     private Room room;
@@ -46,16 +45,16 @@ public class LeaseData {
      * @param   roomNumber
      * @param   leaseId
      * @param   studentId
+     * @param   duration
      */
-    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId, Integer startDate, Integer endDate) {
+    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId, Integer duration) {
         // Populate LeaseData
         this.hallId = new SimpleIntegerProperty(hallId);
         this.flatNumber = new SimpleIntegerProperty(flatNumber);
         this.roomNumber = new SimpleIntegerProperty(roomNumber);
         this.leaseId = new SimpleIntegerProperty(leaseId);
         this.studentId = new SimpleIntegerProperty(studentId);
-        this.startDate = new SimpleIntegerProperty(startDate);
-        this.endDate = new SimpleIntegerProperty(endDate);
+        this.duration = new SimpleIntegerProperty(duration);
         
         // Populate Student, Hall & CleaningStatus Objects
         this.student = Database.getStudentFromId(studentId);
@@ -267,20 +266,11 @@ public class LeaseData {
     }
 
     /**
-     * @name    getStartDate
-     * @desc    Retrieve Lease Start Date
+     * @name    getDuration
+     * @desc    Retrieve Lease Duration
      * @return  IntegerProperty
      */
-    public Integer getStartDate() {
-        return startDate.intValue();
-    }
-
-    /**
-     * @name    getEndDate
-     * @desc    Retrieve Lease End Date
-     * @return  IntegerProperty
-     */
-    public Integer getEndDate() {
-        return endDate.intValue();
+    public Integer getDuration() {
+        return duration.intValue();
     }
 }

@@ -411,7 +411,7 @@ public class Database {
                 }
 
                 while(resultSet.next()) {
-                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("lease_startdate"), resultSet.getInt("lease_enddate")));
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("lease_duration")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -538,7 +538,7 @@ public class Database {
         // Update Lease
         boolean updateComplete = false;
         PreparedStatement prepStatement = null, prepStatement2 = null;
-        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ?, `lease_startdate` = ?, `lease_enddate` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ?, `lease_duration` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
         String query3 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
 
         try {
@@ -548,11 +548,10 @@ public class Database {
             prepStatement.setInt(3, lease.getRoom().getRoomId());
             prepStatement.setInt(4, lease.getRoom().getFlatId());
             prepStatement.setInt(5, lease.getRoom().getHallId());
-            prepStatement.setLong(6, Instant.now().getEpochSecond());
-            prepStatement.setLong(7, Instant.now().getEpochSecond() + ((3600 * 24) * 365));
-            prepStatement.setInt(8, lease.getRoom().getRoomId());
-            prepStatement.setInt(9, lease.getRoom().getFlatId());
-            prepStatement.setInt(10, lease.getRoom().getHallId());
+            prepStatement.setInt(6, 12);
+            prepStatement.setInt(7, lease.getRoom().getRoomId());
+            prepStatement.setInt(8, lease.getRoom().getFlatId());
+            prepStatement.setInt(9, lease.getRoom().getHallId());
             prepStatement.executeUpdate();
 
             prepStatement2 = Database._conn.prepareStatement(query3);
