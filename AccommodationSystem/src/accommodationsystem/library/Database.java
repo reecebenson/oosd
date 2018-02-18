@@ -79,7 +79,7 @@ public class Database {
             prepStatement.setString(2, password);
             resultSet = prepStatement.executeQuery();
             if(resultSet.next()) {
-                User.login(resultSet.getInt("id"), resultSet.getString("username"), resultSet.getString("password"), resultSet.getInt("rank"));
+                User.login(resultSet.getInt("id"), resultSet.getString("username"), resultSet.getString("password"), resultSet.getInt("allocated_hall"));
                 return true;
             } else {
                 return false;
@@ -213,7 +213,7 @@ public class Database {
                 resultSet = pureStatement.executeQuery(query);
 
                 while(resultSet.next()) {
-                    roomList.add(new Room(resultSet.getInt("room_id"), resultSet.getInt("flat_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status")));
+                    roomList.add(new Room(resultSet.getInt("room_id"), resultSet.getInt("flat_id"), resultSet.getInt("hall_id"), resultSet.getInt("occupied"), resultSet.getInt("clean_status"), resultSet.getInt("monthly_price")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -241,7 +241,7 @@ public class Database {
         {
             // Get Rooms
             for(Room h: Database.getRooms()) {
-                roomList.add(new RoomRow(h.getRoomId(), h.getHallId(), h.getOccupied(), h.getCleanStatus()));
+                roomList.add(new RoomRow(h.getRoomId(), h.getHallId(), h.getOccupied(), h.getCleanStatus(), h.getMonthlyPrice()));
             }
         }
         
@@ -366,7 +366,7 @@ public class Database {
                 resultSet = pureStatement.executeQuery(query);
 
                 while(resultSet.next()) {
-                    userList.add(new UserRow(resultSet.getInt("id"), resultSet.getString("username"), resultSet.getString("password"), resultSet.getString("rank")));
+                    userList.add(new UserRow(resultSet.getInt("id"), resultSet.getString("username"), resultSet.getString("password"), resultSet.getString("allocated_hall")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -670,6 +670,61 @@ public class Database {
                 try {
                     if(prepStatement != null) prepStatement.close();
                     if(prepStatement2 != null) prepStatement2.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean createStudent(String first, String last) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "INSERT INTO `students` (`first_name`, `last_name`) VALUES (?, ?)";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setString(1, first);
+                prepStatement.setString(2, last);
+                prepStatement.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean deleteStudent(Integer studentId) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "DELETE FROM `students` WHERE `id` = ?";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setInt(1, studentId);
+                prepStatement.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
                 }catch(Exception x) {}
             }
         }

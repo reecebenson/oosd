@@ -18,17 +18,21 @@ import accommodationsystem.library.Table.StudentRow;
 import accommodationsystem.library.Table.UserRow;
 import com.sun.javafx.tk.FontMetrics;
 import com.sun.javafx.tk.Toolkit;
+import java.util.Optional;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -140,7 +144,7 @@ public class AdminPanel extends GUI {
         TableColumn userId = new TableColumn("ID");
         TableColumn userName = new TableColumn("Username");
         TableColumn userPass = new TableColumn("Password");
-        TableColumn userRank = new TableColumn("Rank");
+        TableColumn userHall = new TableColumn("Allocated Hall");
         TableColumn userPerms = new TableColumn("Permissions");
         
         /**
@@ -170,14 +174,14 @@ public class AdminPanel extends GUI {
         userId.setCellValueFactory(new PropertyValueFactory<>("Id"));
         userName.setCellValueFactory(new PropertyValueFactory<>("Username"));
         userPass.setCellValueFactory(new PropertyValueFactory<>("Password"));
-        userRank.setCellValueFactory(new PropertyValueFactory<>("Rank"));
+        userHall.setCellValueFactory(new PropertyValueFactory<>("Rank"));
         userPerms.setCellValueFactory(new PropertyValueFactory<>("Perms"));
         tbl.setItems(users);
         
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(userId, userName, userPass, userRank, userPerms);
+        tbl.getColumns().addAll(userId, userName, userPass, userHall, userPerms);
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
@@ -310,6 +314,7 @@ public class AdminPanel extends GUI {
         TableColumn hallId = new TableColumn("Hall ID");
         TableColumn occupied = new TableColumn("Occupancy Status");
         TableColumn cleanStatus = new TableColumn("Clean Status");
+        TableColumn monthlyPrice = new TableColumn("Monthly Price (£)");
         
         /**
          * Style Elements
@@ -333,18 +338,19 @@ public class AdminPanel extends GUI {
          */
         ObservableList<RoomRow> rooms = FXCollections.observableArrayList();
         Database.getRoomsAsRow().stream().forEach((r) -> {
-            rooms.add(new RoomRow(r.getRoomId(), r.getHallId(), r.getOccupied(), r.getCleanStatus()));
+            rooms.add(new RoomRow(r.getRoomId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
         });
         roomId.setCellValueFactory(new PropertyValueFactory<>("RoomId"));
         hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
         occupied.setCellValueFactory(new PropertyValueFactory<>("Occupied"));
         cleanStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatus"));
+        monthlyPrice.setCellValueFactory(new PropertyValueFactory<>("MonthlyPrice"));
         tbl.setItems(rooms);
         
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(roomId, hallId, occupied, cleanStatus);
+        tbl.getColumns().addAll(roomId, hallId, occupied, cleanStatus, monthlyPrice);
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
@@ -381,7 +387,6 @@ public class AdminPanel extends GUI {
         ScrollPane tCenter = new ScrollPane();
         AnchorPane tBottom = new AnchorPane();
         Button createButton = new Button();
-        Button editButton = new Button();
         Button deleteButton = new Button();
         FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
         TableView<StudentRow> tbl = new TableView<>();
@@ -399,7 +404,6 @@ public class AdminPanel extends GUI {
         tCenter.setFitToHeight(true);
         // Buttons
         createButton.setText("Create Student");
-        editButton.setText("Edit Student");
         deleteButton.setText("Delete Student");
         // Anchors
         tBottomBtnStrip.setAlignment(Pos.CENTER);
@@ -436,10 +440,95 @@ public class AdminPanel extends GUI {
         }
         
         /**
+         * Add functionality to buttons
+         */
+        createButton.setOnAction((e) -> {
+            String firstName = null, lastName = null;
+            
+            /**
+             * First Name
+             */
+            TextInputDialog tidFirst = new TextInputDialog();
+            tidFirst.setTitle("Enter First Name");
+            tidFirst.setHeaderText("Please enter the First Name");
+            tidFirst.setContentText("First Name:");
+            Optional<String> rFirst = tidFirst.showAndWait();
+            if(rFirst.isPresent() && !rFirst.get().isEmpty())
+                firstName = rFirst.get();
+            
+            /**
+             * Last Name
+             */
+            TextInputDialog tidLast = new TextInputDialog();
+            tidLast.setTitle("Enter Last Name");
+            tidLast.setHeaderText("Please enter the Last Name");
+            tidLast.setContentText("Last Name:");
+            Optional<String> rLast = tidLast.showAndWait();
+            if(rLast.isPresent() && !rLast.get().isEmpty())
+                lastName = rLast.get();
+            
+            /**
+             * Create Student
+             */
+            if(firstName != null && lastName != null) {
+                if(Database.createStudent(firstName, lastName)) {
+                    new Alert(Alert.AlertType.CONFIRMATION, firstName + " " + lastName + " was created as a student.", ButtonType.OK).showAndWait();
+                    
+                    // Clear Table
+                    tbl.getItems().clear();
+                    
+                    // Rebuild Table
+                    ObservableList<StudentRow> sList = FXCollections.observableArrayList();
+                    Database.getStudentsAsRow().stream().forEach((student) -> {
+                        sList.add(new StudentRow(student.getId(), student.getFirstName(), student.getLastName()));
+                    });
+                    
+                    // Set Table Items
+                    tbl.setItems(sList);
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Unable to create student!", ButtonType.OK).showAndWait();
+                }
+            }
+        });
+        
+        deleteButton.setOnAction((e) -> {
+            // Get Selected Item
+            StudentRow srSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(srSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a Student to remove!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Confirm Deletion
+            Alert confirmDeletion = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete " + srSelected.getFirstName() + " " + srSelected.getLastName() + "?", ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> r = confirmDeletion.showAndWait();
+            if(r.get() == ButtonType.YES) {
+                // Deletion Confirmed
+                if(Database.deleteStudent(srSelected.getId())) {
+                    // Clear Table
+                    tbl.getItems().clear();
+                    
+                    // Rebuild Table
+                    ObservableList<StudentRow> sList = FXCollections.observableArrayList();
+                    Database.getStudentsAsRow().stream().forEach((student) -> {
+                        sList.add(new StudentRow(student.getId(), student.getFirstName(), student.getLastName()));
+                    });
+                    
+                    // Set Table Items
+                    tbl.setItems(sList);
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Unable to delete student!", ButtonType.OK).showAndWait();
+                }
+            }
+        });
+        
+        /**
          * Compile Elements
          */
         tCenter.setContent(tbl);
-        tBottomBtnStrip.getChildren().addAll(createButton, editButton, deleteButton);
+        tBottomBtnStrip.getChildren().addAll(createButton, deleteButton);
         tBottom.getChildren().addAll(tBottomBtnStrip);
         tContent.setCenter(tCenter);
         tContent.setBottom(tBottom);

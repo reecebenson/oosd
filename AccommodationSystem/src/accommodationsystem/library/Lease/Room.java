@@ -13,14 +13,16 @@ public class Room {
             flatId,
             hallId,
             occupied,
-            cleanStatus;
+            cleanStatus,
+            monthlyPrice;
 
-    public Room(int roomId, int flatId, int hallId, int occupied, int cleanStatus) {
+    public Room(int roomId, int flatId, int hallId, int occupied, int cleanStatus, int monthlyPrice) {
         this.roomId = roomId;
         this.flatId = flatId;
         this.hallId = hallId;
         this.occupied = occupied;
         this.cleanStatus = cleanStatus;
+        this.monthlyPrice = monthlyPrice;
     }
 
     public int getRoomId() {
@@ -61,5 +63,13 @@ public class Room {
 
     public void setCleanStatus(int cleanStatus) {
         this.cleanStatus = cleanStatus;
+    }
+
+    public int getMonthlyPrice() {
+        return monthlyPrice;
+    }
+
+    public void setMonthlyPrice(int monthlyPrice) {
+        this.monthlyPrice = monthlyPrice;
     }
 }

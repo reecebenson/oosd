@@ -15,13 +15,15 @@ public class RoomRow {
     private final IntegerProperty roomId,
             hallId,
             occupied,
-            cleanStatus;
+            cleanStatus,
+            monthlyPrice;
 
-    public RoomRow(Integer roomId, Integer hallId, Integer occupied, Integer cleanStatus) {
+    public RoomRow(Integer roomId, Integer hallId, Integer occupied, Integer cleanStatus, Integer monthlyPrice) {
         this.roomId = new SimpleIntegerProperty(roomId);
         this.hallId = new SimpleIntegerProperty(hallId);
         this.occupied = new SimpleIntegerProperty(occupied);
         this.cleanStatus = new SimpleIntegerProperty(cleanStatus);
+        this.monthlyPrice = new SimpleIntegerProperty(monthlyPrice);
     }
 
     public Integer getRoomId() {
@@ -39,6 +41,8 @@ public class RoomRow {
     public Integer getCleanStatus() {
         return cleanStatus.intValue();
     }
-    
-    
+
+    public Integer getMonthlyPrice() {
+        return monthlyPrice.intValue();
+    }
 }

@@ -81,7 +81,8 @@ public class Browser extends GUI {
             miUpdateLease,
             miDeleteLease,
             miCheckLeaseDuration,
-            miViewStudent;
+            miViewStudent,
+            miHallLocation;
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
@@ -334,7 +335,8 @@ public class Browser extends GUI {
             miDeleteLease = new MenuItem("Delete Lease");
             miCheckLeaseDuration = new MenuItem("Check Lease Duration");
             miViewStudent = new MenuItem("View Student");
-            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent);
+            miHallLocation = new MenuItem("Get Hall Details");
+            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent, miHallLocation);
             
             /**
              * Menu Item Listeners
@@ -344,6 +346,7 @@ public class Browser extends GUI {
             miDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
             miCheckLeaseDuration.setOnAction((ActionEvent e) -> mi_CheckLeaseDuration(e));
             miViewStudent.setOnAction((ActionEvent e) -> mi_ViewStudent(e));
+            miHallLocation.setOnAction((ActionEvent e) -> mi_HallLocation(e));
             
             /**
              * Table Listeners
@@ -469,6 +472,16 @@ public class Browser extends GUI {
         viewStudentInfo.showAndWait();
     }
     
+    private void mi_HallLocation(ActionEvent e) {
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Show Alert (Message)
+        String m = MessageFormat.format("This lease exists within {0}.\n\nName: {0}\nNumber: {1}\nAddress: {2}\nPostcode: {3}\nTelephone: {4}",
+                lease.getHallName(), lease.getHall().getId(), lease.getHall().getAddress(), lease.getHall().getPostcode(), lease.getHall().getPhone());
+        Alert hallDetails = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
+        hallDetails.showAndWait();
+    }
     
     private void tbl_Select(Object obs, Object oldSelection, Object newSelection) {
         // Enable or Disable our Footer Buttons
@@ -505,6 +518,7 @@ public class Browser extends GUI {
         miDeleteLease.setDisable((lease.getLeaseId() == null));
         miCheckLeaseDuration.setDisable((lease.getLeaseId() == null));
         miViewStudent.setDisable((lease.getLeaseId() == null));
+        miHallLocation.setDisable(false);
         
         // Debug
         AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());

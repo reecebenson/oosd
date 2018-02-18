@@ -20,19 +20,19 @@ public class User {
     private static int          _userId = -1;
     private static String       _username = null;
     private static String       _password = null;
-    private static int          _userrank = 0;
+    private static int          _userhall = -1;
     private static List<String> _userperms = new ArrayList<>();
     
     public static boolean loggedIn() {
         return User._loggedIn;
     }
     
-    public static void login(int userId, String username, String password, int rank) {
+    public static void login(int userId, String username, String password, int allocatedHall) {
         // Update Data
         User._userId   = userId;
         User._username = username;
         User._password = password;
-        User._userrank = rank;
+        User._userhall = allocatedHall;
         User._loggedIn = true;
         
         // Retrieve User Permissions
@@ -48,7 +48,7 @@ public class User {
         // Update Data
         User._username = null;
         User._password = null;
-        User._userrank = 0;
+        User._userhall = -1;
         User._loggedIn = false;
         User._userperms = new ArrayList<>();
     }
@@ -65,8 +65,8 @@ public class User {
         return User._username;
     }
     
-    public static int getRank() {
-        return User._userrank;
+    public static int getAllocatedHall() {
+        return User._userhall;
     }
     
     public static String getPassword() {
