@@ -14,13 +14,6 @@ import java.util.List;
  */
 public class Permissions {
     /**
-     * Ranks (currently useless due to permissions per user?)
-     */
-    public static final int WARDEN = 1;
-    public static final int MANAGER = 2;
-    public static final int ADMINISTRATOR = 3;
-    
-    /**
      * Permissions
      */
     public static final String LOGIN = "LOGIN";
