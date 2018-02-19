@@ -10,10 +10,12 @@
 package accommodationsystem.bases;
 
 import accommodationsystem.AccommodationSystem;
+import java.io.InputStream;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class GUI {
@@ -26,6 +28,7 @@ public class GUI {
     private     String      _title;
     private     int         _sizeX;
     private     int         _sizeY;
+    private     Font        _fontAwesome;
     private     boolean     _hasFinalised = false;
     
     /**
@@ -107,6 +110,32 @@ public class GUI {
     }
     
     /**
+     * @name    importFonts
+     * @desc    Load Fonts for Global Use
+     */
+    private void importFonts() {
+        try {
+            InputStream font = this.getClass().getResourceAsStream("accommodationsystem/resources/fonts/fontawesome_5_regular.ttf");
+            _fontAwesome = Font.loadFont(font, 10);
+        }
+        catch(Exception x) {
+            System.out.println("Error trying to import Fonts for '" + this.formId() + "'");
+        }
+    }
+    
+    /**
+     * @name    getFontAwesome
+     * @desc    Get FontAwesome for Global Use
+     * 
+     * @return  Font
+     */
+    public Font getFontAwesome() {
+        if(!this.hasFinalised())
+            return null;
+        return this._fontAwesome;
+    }
+    
+    /**
      * @name    build
      * @desc    Builds the GUI and returns a Scene
      * 
@@ -127,6 +156,9 @@ public class GUI {
             System.out.println("Error trying to import CSS file for '" + this.formId() + "'");
             System.out.println("'accommdationsystem/resources/css/" + this.formId() + ".css' does not exist for this GUI.");
         }
+        
+        // Import Fonts
+        this.importFonts();
         
         // Modify Scene Flags
         this._stage.getIcons().add(new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/icon.png")));

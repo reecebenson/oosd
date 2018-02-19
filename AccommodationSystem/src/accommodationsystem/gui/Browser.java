@@ -10,11 +10,15 @@ import accommodationsystem.library.User;
 import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Database;
 import accommodationsystem.library.Lease.CleaningStatus;
+import accommodationsystem.library.Lease.Occupancy;
 import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
@@ -25,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Hyperlink;
@@ -35,6 +40,7 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -71,9 +77,11 @@ public class Browser extends GUI {
     TableView<LeaseData> tbl = new TableView<>();
     Button btnCreateLease,
             btnViewLease,
-            btnDeleteLease;
+            btnDeleteLease,
+            btnSearch;
     ComboBox comboChangeCleanStatus;
     private int _currentHallView = -1;
+    private boolean _isSearching = false;
     
     // Table Context Menu
     ContextMenu rightClickMenu;
@@ -105,6 +113,7 @@ public class Browser extends GUI {
         ComboBox cbHalls;
         Button btnAdminPanel = new Button();
         Button btnLogout = new Button();
+        btnSearch = new Button();
         // Images
         Image logo = new Image(this.getClass().getClassLoader().getResourceAsStream("accommodationsystem/resources/images/logo.png"));
         ImageView logoView = new ImageView(logo);
@@ -154,10 +163,13 @@ public class Browser extends GUI {
         btnAdminPanel.setText("Administrator Panel");
         btnAdminPanel.setAlignment(Pos.CENTER);
         btnAdminPanel.setOnAction((ActionEvent e) -> btnAdminPanel_Click(e));
+        // Search Button
+        btnSearch.getStyleClass().addAll("button", "fontawesome");
+        btnSearch.setText("🔍"); // Search Magnify Glass
+        btnSearch.setOnAction((ActionEvent e) -> btnSearch_Click(e));
         // Logout Button
-        btnLogout.setId("logoutBtn");
+        btnLogout.getStyleClass().add("button");
         btnLogout.setText("Logout");
-        btnLogout.setVisible(true);
         btnLogout.setAlignment(Pos.CENTER);
         btnLogout.setOnAction((ActionEvent e) -> btnLogout_Click(e));
         
@@ -170,6 +182,7 @@ public class Browser extends GUI {
         // ComboBox
         btnStrip.getChildren().add(cbHalls);
         if(User.hasPermission(Permissions.ADMIN_PANEL)) btnStrip.getChildren().add(btnAdminPanel);
+        btnStrip.getChildren().add(btnSearch);
         btnStrip.getChildren().add(btnLogout);
         // Header Left
         headerLeft.getChildren().add(logoView);
@@ -201,6 +214,164 @@ public class Browser extends GUI {
         try {
             new AdminPanel().getStage().showAndWait();
         } catch(Exception e) { }
+    }
+    
+    /**
+     * @name    btnSearch_Click
+     * @desc    Handles the Click event for the search button
+     * @param   event
+     */
+    private void btnSearch_Click(ActionEvent event) {
+        /**
+         * Check if we're searching already
+         */
+        if(_isSearching) {
+            _isSearching = false;
+            btnSearch.setText("🔍"); // Search Magnify Glass
+            this.buildTable(0);
+            return;
+        }
+        
+        List<String> choices = new ArrayList<>();
+        choices.add("Student Name");
+        choices.add("Hall Name");
+        choices.add("Flat Number");
+        choices.add("Room Number");
+        choices.add("Cleaning Status");
+        choices.add("Occupancy");
+
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Student Name", choices);
+        dialog.setTitle("Search");
+        dialog.setHeaderText("Please select a searching option");
+        dialog.setContentText("Search by:");
+        Optional<String> res = dialog.showAndWait();
+        if(res.isPresent()) {
+            List<LeaseData> leases = Database.getLeases(0);
+            switch(res.get()) {
+                case "Student Name": {
+                    TextInputDialog tiDialog = new TextInputDialog();
+                    tiDialog.setHeaderText("Please enter a name to search by");
+                    tiDialog.setContentText("Please enter a name:");
+                    Optional<String> snRes = tiDialog.showAndWait();
+                    if(snRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getStudentName().toLowerCase().contains(snRes.get().toLowerCase())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                case "Hall Name": {
+                    List<String> hallNames = Database.getHallNames(false).stream().collect(Collectors.toList());
+                    
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>("", hallNames);
+                    cDialog.setHeaderText("Please select a Hall Name");
+                    cDialog.setContentText("Please select a hall:");
+                    Optional<String> cRes = cDialog.showAndWait();
+                    if(cRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getHallName().equals(cRes.get())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                case "Flat Number": {
+                    List<String> flatNumbs = new ArrayList<>();
+                    leases.stream().forEach((l) -> { if(!flatNumbs.contains(l.getFlatNumber().toString())) { flatNumbs.add(l.getFlatNumber().toString()); } });
+                    
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>("", flatNumbs);
+                    cDialog.setHeaderText("Please select a Flat Number");
+                    cDialog.setContentText("Please select a number:");
+                    Optional<String> cRes = cDialog.showAndWait();
+                    if(cRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getFlatNumber().toString().equals(cRes.get())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                case "Room Number": {
+                    List<String> roomNumbs = new ArrayList<>();
+                    leases.stream().forEach((l) -> { if(!roomNumbs.contains(l.getRoomNumber().toString())) { roomNumbs.add(l.getRoomNumber().toString()); } });
+                    
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>("", roomNumbs);
+                    cDialog.setHeaderText("Please select a Room Number");
+                    cDialog.setContentText("Please select a number:");
+                    Optional<String> cRes = cDialog.showAndWait();
+                    if(cRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getRoomNumber().toString().equals(cRes.get())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                case "Cleaning Status": {
+                    List<String> cleaningStatuses = CleaningStatus.getStatuses().stream().collect(Collectors.toList());
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>("", cleaningStatuses);
+                    cDialog.setHeaderText("Please select a Cleaning Status");
+                    cDialog.setContentText("Please select a status:");
+                    Optional<String> cRes = cDialog.showAndWait();
+                    if(cRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getCleanStatusName().equals(cRes.get())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                case "Occupancy": {
+                    List<String> occupancyStatuses = Occupancy.getOccupancies().stream().collect(Collectors.toList());
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>("", occupancyStatuses);
+                    cDialog.setHeaderText("Please select a Occupancy Status");
+                    cDialog.setContentText("Please select a status:");
+                    Optional<String> cRes = cDialog.showAndWait();
+                    if(cRes.isPresent()) {
+                        List<LeaseData> sortedLeases = new ArrayList<>();
+                        for(LeaseData l: leases) {
+                            if(l.getOccupiedStatus().equals(cRes.get())) {
+                                sortedLeases.add(l);
+                            }
+                        }
+                        
+                        // Populate our table
+                        this.populateTable(sortedLeases);
+                    }
+                }
+                break;
+                default: {
+                    new Alert(Alert.AlertType.ERROR, "Invalid option selected for search.", ButtonType.OK).show();
+                }
+                break;
+            }
+        }
     }
     
     /**
@@ -302,8 +473,27 @@ public class Browser extends GUI {
         }
     }
     
-    private void tbl_RightClicked(MouseEvent e) {
+    /**
+     * @name    populateTable
+     * @desc    Create the Table of the "Browser" GUI
+     * 
+     * @param   leases
+     */
+    public void populateTable(List<LeaseData> leases) {
+        /**
+         * Clean-up Table
+         */
+        if(super.hasFinalised()) {
+            tbl.getItems().clear();
+        }
         
+        /**
+         * Populate Table
+         */
+        btnSearch.setText("×"); // Erase Text
+        _isSearching = true;
+        tbl.getItems().setAll(leases);
+        _currentHallView = -1;
     }
     
     /**
@@ -468,7 +658,8 @@ public class Browser extends GUI {
         }
         
         // Show Alert (Message)
-        Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, "Student ID: {}\nStudent Name: {}\n\n{} lives in Room {}, Flat {}, {}.", ButtonType.OK);
+        String m = MessageFormat.format("Student ID: {0}\nStudent Name: {1}\n\n{1} lives in Room {2}, Flat {3}, {4}.", lease.getStudentId(), lease.getStudentName(), lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName());
+        Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         viewStudentInfo.showAndWait();
     }
     
