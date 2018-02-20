@@ -12,13 +12,17 @@ package accommodationsystem.gui;
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Permissions;
 import accommodationsystem.library.Table.HallRow;
 import accommodationsystem.library.Table.RoomRow;
 import accommodationsystem.library.Table.StudentRow;
 import accommodationsystem.library.Table.UserRow;
 import com.sun.javafx.tk.FontMetrics;
 import com.sun.javafx.tk.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -26,7 +30,9 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -197,6 +203,112 @@ public class AdminPanel extends GUI {
         
         // Update Permissions Column Width
         userPerms.setPrefWidth(250);
+        
+        /**
+         * Add functionality to buttons
+         */
+        createButton.setOnAction((e) -> {
+            boolean error = false;
+            String username = null, password = null;
+            Integer allocatedHall = null;
+            List<String> permissions = new ArrayList<>();
+            
+            // Username Input
+            TextInputDialog tiDialog = new TextInputDialog();
+            tiDialog.setHeaderText("Please enter a username");
+            tiDialog.setContentText("Username:");
+            Optional<String> tiRes = tiDialog.showAndWait();
+            if(tiRes.isPresent()) {
+                // Username has been entered
+                username = tiRes.get();
+            } else error = true;
+            
+            // Error Check
+            if(error) return;
+            
+            // Password Input
+            TextInputDialog ti2Dialog = new TextInputDialog();
+            ti2Dialog.setHeaderText("Please enter a password");
+            ti2Dialog.setContentText("Password:");
+            Optional<String> ti2Res = ti2Dialog.showAndWait();
+            if(ti2Res.isPresent()) {
+                // Username has been entered
+                password = ti2Res.get();
+            } else error = true;
+            
+            // Error Check
+            if(error) return;
+            
+            // Allocated Hall Input
+            List<String> hallNames = Database.getHallNames(true).stream().collect(Collectors.toList());
+
+            ChoiceDialog<String> cDialog = new ChoiceDialog<>("", hallNames);
+            cDialog.setHeaderText("Please select a Hall Name");
+            cDialog.setContentText("Please select a hall:");
+            Optional<String> cRes = cDialog.showAndWait();
+            if(cRes.isPresent()) {
+                allocatedHall = hallNames.indexOf(cRes.get());
+            } else error = true;
+            
+            // Error Check
+            if(error) return;
+            
+            // Add Permissions
+            boolean finishedAddingPermissions = false;
+            String contentText = "Use the Add Permission button to add permissions to " + username + "\n\nCurrent Permissions:";
+            Alert perms = new Alert(Alert.AlertType.CONFIRMATION);
+            perms.setTitle("Select Permissions");
+            perms.setHeaderText("Select permissions for " + username);
+            perms.setContentText(contentText);
+            
+            ButtonType addPerm = new ButtonType("Add Permission");
+            ButtonType delPerm = new ButtonType("Remove Permission");
+            ButtonType complete = new ButtonType("Create User", ButtonData.FINISH);
+            perms.getButtonTypes().setAll(addPerm, delPerm, complete);
+            
+            while(!finishedAddingPermissions) {
+                Optional<ButtonType> res = perms.showAndWait();
+                if(res.get() == addPerm) {
+                    List<String> filteredPerms = new ArrayList<>();
+                    Permissions.getPermissions().stream().forEach((p) -> { if(!permissions.contains(p)) filteredPerms.add(p); });
+                    ChoiceDialog<String> apDialog = new ChoiceDialog<>("", filteredPerms);
+                    apDialog.setTitle("Add Permissions");
+                    apDialog.setHeaderText("Add Permissions");
+                    apDialog.setContentText("Please select a permission to add:");
+                    Optional<String> apRes = apDialog.showAndWait();
+                    if(apRes.isPresent()) {
+                        permissions.add(apRes.get());
+                    }
+                } else if(res.get() == delPerm) {
+                    List<String> filteredPerms = new ArrayList<>();
+                    permissions.stream().forEach((p) -> filteredPerms.add(p));
+                    ChoiceDialog<String> apDialog = new ChoiceDialog<>("", filteredPerms);
+                    apDialog.setTitle("Remove Permissions");
+                    apDialog.setHeaderText("Remove Permissions");
+                    apDialog.setContentText("Please select a permission to remove:");
+                    Optional<String> apRes = apDialog.showAndWait();
+                    if(apRes.isPresent()) {
+                        permissions.remove(permissions.indexOf(apRes.get()));
+                    }
+                } else if(res.get() == complete) {
+                    System.out.println("finished");
+                    finishedAddingPermissions = true;
+                }
+                
+                // Update content
+                perms.setContentText((permissions.size() > 0) ? contentText + "\n\n- " + String.join("\n- ", permissions) : contentText);
+            }
+            
+            System.out.println("out of while - finished");
+        });
+        
+        editButton.setOnAction((e) -> {
+            System.out.println("edit button");
+        });
+        
+        deleteButton.setOnAction((e) -> {
+            System.out.println("delete button");
+        });
         
         /**
          * Compile Elements
