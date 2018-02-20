@@ -12,6 +12,7 @@ package accommodationsystem.gui;
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Database;
+import accommodationsystem.library.Lease.Hall;
 import accommodationsystem.library.Permissions;
 import accommodationsystem.library.Table.HallRow;
 import accommodationsystem.library.Table.RoomRow;
@@ -35,11 +36,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -604,6 +608,182 @@ public class AdminPanel extends GUI {
         }
         
         /**
+         * Add functionality to buttons
+         */
+        
+        // Setup Dialog
+        Dialog<Boolean> hallDialog = new Dialog<>();
+        
+        // Create the username and password labels and fields
+        GridPane hallGrid = new GridPane();
+        hallGrid.setHgap(10);
+        hallGrid.setVgap(10);
+        hallGrid.setPadding(new Insets(20, 150, 10, 10));
+            
+        // Set fields
+        TextField cbHallName = new TextField();
+        cbHallName.setPromptText("Hall Name");
+        TextField cbHallShortName = new TextField();
+        cbHallShortName.setPromptText("Hall Short Name");
+        TextField cbHallAddress = new TextField();
+        cbHallAddress.setPromptText("Hall Full Address");
+        TextField cbHallPostCode = new TextField();
+        cbHallPostCode.setPromptText("Hall Post Code");
+        TextField cbHallPhone = new TextField();
+        cbHallPhone.setPromptText("Hall Phone Number");
+
+        // Setup Grid
+        hallGrid.add(new Label("Name:"), 0, 0);
+        hallGrid.add(cbHallName, 1, 0);
+        hallGrid.add(new Label("Short Name:"), 0, 1);
+        hallGrid.add(cbHallShortName, 1, 1);
+        hallGrid.add(new Label("Full Address:"), 0, 2);
+        hallGrid.add(cbHallAddress, 1, 2);
+        hallGrid.add(new Label("Postcode:"), 0, 3);
+        hallGrid.add(cbHallPostCode, 1, 3);
+        hallGrid.add(new Label("Phone Number:"), 0, 4);
+        hallGrid.add(cbHallPhone, 1, 4);
+        hallDialog.getDialogPane().setContent(hallGrid);
+        
+        // Create Button
+        createButton.setOnAction((e) -> {
+            // Create the custom dialog.
+            hallDialog.setTitle("Create Hall");
+            hallDialog.setHeaderText("Create Hall");
+            
+            // Initialise elements
+            ButtonType hallOkButton = new ButtonType("Create Hall", ButtonData.OK_DONE);
+            hallDialog.getDialogPane().getButtonTypes().clear();
+            hallDialog.getDialogPane().getButtonTypes().addAll(hallOkButton, ButtonType.CANCEL);
+
+            // Button True/False Sets
+            hallDialog.setResultConverter(dialogButton -> {
+                if(dialogButton == hallOkButton) {
+                    return true;
+                } else if(dialogButton == ButtonType.CANCEL) {
+                    return false;
+                }
+                return null;
+            });
+            
+            // Handle Result
+            Optional<Boolean> result = hallDialog.showAndWait();
+            if(result.isPresent()) {
+                if(result.get()) {
+                    // Validate Hall Stuff
+                    if(!(cbHallName.getText().isEmpty() && cbHallShortName.getText().isEmpty() && cbHallAddress.getText().isEmpty() && cbHallPostCode.getText().isEmpty() && cbHallPhone.getText().isEmpty())) {
+                        Database.createHall(new Hall(-1, cbHallName.getText(), cbHallShortName.getText(), cbHallAddress.getText(), cbHallPostCode.getText(), cbHallPhone.getText(), -1));
+                        
+                        // Clear Table
+                        tbl.getItems().clear();
+
+                        // Rebuild Table
+                        ObservableList<HallRow> newHalls = FXCollections.observableArrayList();
+                        Database.getHallsAsRow().stream().forEach((h) -> {
+                            newHalls.add(new HallRow(h.getHallId(), h.getHallName(), h.getHallShortName(), h.getHallAddress(), h.getHallPostcode(), h.getHallPhone(), h.getHallRoomCount()));
+                        });
+                        tbl.setItems(newHalls);
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Unable to create Hall!", ButtonType.OK).showAndWait();
+                    }
+                }
+            }
+        });
+        
+        // Edit Button
+        editButton.setOnAction((e) -> {
+            // Get Selected Item
+            HallRow hrSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(hrSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a Hall to edit!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Create the custom dialog.
+            hallDialog.setTitle("Create Hall");
+            hallDialog.setHeaderText("Create Hall");
+            
+            // Initialise elements
+            ButtonType hallOkButton = new ButtonType("Update Hall", ButtonData.OK_DONE);
+            hallDialog.getDialogPane().getButtonTypes().clear();
+            hallDialog.getDialogPane().getButtonTypes().addAll(hallOkButton, ButtonType.CANCEL);
+            
+            // Set Input Values
+            cbHallName.setText(hrSelected.getHallName());
+            cbHallShortName.setText(hrSelected.getHallShortName());
+            cbHallAddress.setText(hrSelected.getHallAddress());
+            cbHallPostCode.setText(hrSelected.getHallPostcode());
+            cbHallPhone.setText(hrSelected.getHallPhone());
+
+            // Button True/False Sets
+            hallDialog.setResultConverter(dialogButton -> {
+                if(dialogButton == hallOkButton) {
+                    return true;
+                } else if(dialogButton == ButtonType.CANCEL) {
+                    return false;
+                }
+                return null;
+            });
+            
+            // Handle Result
+            Optional<Boolean> result = hallDialog.showAndWait();
+            if(result.isPresent()) {
+                if(result.get()) {
+                    // Validate Hall Stuff
+                    if(!(cbHallName.getText().isEmpty() && cbHallShortName.getText().isEmpty() && cbHallAddress.getText().isEmpty() && cbHallPostCode.getText().isEmpty() && cbHallPhone.getText().isEmpty())) {
+                        Database.updateHall(new Hall(hrSelected.getHallId(), cbHallName.getText(), cbHallShortName.getText(), cbHallAddress.getText(), cbHallPostCode.getText(), cbHallPhone.getText(), -1));
+                        
+                        // Clear Table
+                        tbl.getItems().clear();
+                        
+                        // Rebuild Table
+                        ObservableList<HallRow> newHalls = FXCollections.observableArrayList();
+                        Database.getHallsAsRow().stream().forEach((h) -> {
+                            newHalls.add(new HallRow(h.getHallId(), h.getHallName(), h.getHallShortName(), h.getHallAddress(), h.getHallPostcode(), h.getHallPhone(), h.getHallRoomCount()));
+                        });
+                        tbl.setItems(newHalls);
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Unable to create Hall!", ButtonType.OK).showAndWait();
+                    }
+                }
+            }
+        });
+        
+        // Delete Button
+        deleteButton.setOnAction((e) -> {
+            // Get Selected Item
+            HallRow hrSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(hrSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a Hall to delete!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Confirm Deletion
+            Alert confirmDeletion = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete " + hrSelected.getHallName() + "?", ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> r = confirmDeletion.showAndWait();
+            if(r.get() == ButtonType.YES) {
+                // Deletion Confirmed
+                if(Database.deleteHall(hrSelected.getHallId())) {
+                    // Clear Table
+                    tbl.getItems().clear();
+                    
+                    // Rebuild Table
+                    ObservableList<HallRow> newHalls = FXCollections.observableArrayList();
+                    Database.getHallsAsRow().stream().forEach((h) -> {
+                        newHalls.add(new HallRow(h.getHallId(), h.getHallName(), h.getHallShortName(), h.getHallAddress(), h.getHallPostcode(), h.getHallPhone(), h.getHallRoomCount()));
+                    });
+                    tbl.setItems(newHalls);
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Unable to delete hall!", ButtonType.OK).showAndWait();
+                }
+            }
+        });
+        
+        /**
          * Compile Elements
          */
         tCenter.setContent(tbl);
@@ -683,6 +863,13 @@ public class AdminPanel extends GUI {
             double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
             tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
         }
+        
+        /**
+         * Add functionality to buttons
+         */
+        createButton.setOnAction((e) -> { });
+        editButton.setOnAction((e) -> { });
+        deleteButton.setOnAction((e) -> { });
         
         /**
          * Compile Elements

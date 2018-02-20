@@ -958,4 +958,95 @@ public class Database {
         LeaseData l = Database.getLeaseByHFR(hallId, flatNumber, roomNumber);
         return (l != null ? l.getOccupied() : false);
     }
+    
+    public static boolean createHall(Hall hallData) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "INSERT INTO `halls` (`name`, `short_name`, `address`, `postcode`, `phone`, `room_count`) VALUES (?, ?, ?, ?, ?, ?)";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setString(1, hallData.getName());
+                prepStatement.setString(2, hallData.getShortName());
+                prepStatement.setString(3, hallData.getAddress());
+                prepStatement.setString(4, hallData.getPostcode());
+                prepStatement.setString(5, hallData.getPhone());
+                prepStatement.setInt(6, 0);
+                prepStatement.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean updateHall(Hall hallData) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "UPDATE `halls` SET `name` = ?, `short_name` = ?, `address` = ?, `postcode` = ?, `phone` = ? WHERE `id` = ?";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setString(1, hallData.getName());
+                prepStatement.setString(2, hallData.getShortName());
+                prepStatement.setString(3, hallData.getAddress());
+                prepStatement.setString(4, hallData.getPostcode());
+                prepStatement.setString(5, hallData.getPhone());
+                prepStatement.setInt(6, hallData.getId());
+                prepStatement.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean deleteHall(Integer hallId) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "DELETE FROM `halls` WHERE `id` = ?";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setInt(1, hallId);
+                prepStatement.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                } catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
 }

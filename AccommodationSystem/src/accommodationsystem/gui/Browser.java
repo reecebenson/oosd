@@ -95,6 +95,7 @@ public class Browser extends GUI {
             miDeleteLease,
             miCheckLeaseDuration,
             miViewStudent,
+            miRoomLocation,
             miHallLocation;
     
     // GUI Size (default: 800)
@@ -547,8 +548,9 @@ public class Browser extends GUI {
             miDeleteLease = new MenuItem("Delete Lease");
             miCheckLeaseDuration = new MenuItem("Check Lease Duration");
             miViewStudent = new MenuItem("View Student");
+            miRoomLocation = new MenuItem("Get Room Details");
             miHallLocation = new MenuItem("Get Hall Details");
-            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent, miHallLocation);
+            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent, miRoomLocation, miHallLocation);
             
             /**
              * Menu Item Listeners
@@ -558,6 +560,7 @@ public class Browser extends GUI {
             miDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
             miCheckLeaseDuration.setOnAction((ActionEvent e) -> mi_CheckLeaseDuration(e));
             miViewStudent.setOnAction((ActionEvent e) -> mi_ViewStudent(e));
+            miRoomLocation.setOnAction((ActionEvent e) -> mi_RoomLocation(e));
             miHallLocation.setOnAction((ActionEvent e) -> mi_HallLocation(e));
             
             /**
@@ -711,6 +714,17 @@ public class Browser extends GUI {
         String m = MessageFormat.format("Student ID: {0}\nStudent Name: {1}\n\n{1} lives in Room {2}, Flat {3}, {4}.", lease.getStudentId(), lease.getStudentName(), lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName());
         Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         viewStudentInfo.showAndWait();
+    }
+    
+    private void mi_RoomLocation(ActionEvent e) {
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Show Alert (Message)
+        String m = MessageFormat.format("This lease''s address is set to:\n\nRoom {0}, Flat {1}, {2}\n{3}\n{4}",
+                lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName(), lease.getHall().getAddress(), lease.getHall().getPostcode());
+        Alert roomDetails = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
+        roomDetails.showAndWait();
     }
     
     private void mi_HallLocation(ActionEvent e) {
