@@ -136,7 +136,8 @@ public class Browser extends GUI {
         headerBox.setId("topBox");
         headerLeft.setAlignment(Pos.CENTER_LEFT);
         headerRight.setAlignment(Pos.TOP_RIGHT);
-        headerSpacer.setPrefWidth(50);
+        headerRight.setMinWidth(500.0);
+        headerSpacer.setPrefWidth(0);
         HBox.setHgrow(headerSpacer, Priority.ALWAYS);
         btnStrip.setAlignment(Pos.TOP_RIGHT);
         // Logo

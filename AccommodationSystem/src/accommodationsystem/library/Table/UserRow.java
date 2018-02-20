@@ -18,17 +18,17 @@ public class UserRow {
     private final IntegerProperty userId;
     private final StringProperty userName;
     private final StringProperty userPass;
-    private final StringProperty userRank;
+    private final StringProperty userAllocatedHall;
     private final StringProperty userPerms;
 
-    public UserRow(Integer userId, String userName, String userPass, String userRank) {
+    public UserRow(Integer userId, String userName, String userPass, String userAllocatedHall) {
         this.userId = new SimpleIntegerProperty(userId);
         this.userName = new SimpleStringProperty(userName);
         this.userPass = new SimpleStringProperty(userPass);
-        this.userRank = new SimpleStringProperty(userRank);
+        this.userAllocatedHall = new SimpleStringProperty(userAllocatedHall);
         
         // Get User Permissions
-        this.userPerms = new SimpleStringProperty(String.join(", ", Database.getUserPermissions(userId)));
+        this.userPerms = new SimpleStringProperty(String.join(",", Database.getUserPermissions(userId)));
     }
 
     public Integer getId() {
@@ -43,8 +43,8 @@ public class UserRow {
         return userPass.getValue();
     }
 
-    public String getRank() {
-        return userRank.getValue();
+    public String getAllocatedHall() {
+        return userAllocatedHall.getValue();
     }
 
     public String getPerms() {

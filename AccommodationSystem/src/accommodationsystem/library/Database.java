@@ -94,6 +94,182 @@ public class Database {
         return false;
     }
     
+    public static void createUser(String username, String password, int allocatedHall, List<String> permissions) {
+        // Validate User Login
+        if(!User.loggedIn()) return;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            // Insert User & Permissions
+            PreparedStatement prepStatement = null, prepStatement2 = null;
+            String query = "INSERT INTO `users` (`username`, `password`, `allocated_hall`) VALUES (?, ?, ?)";
+            
+            try {
+                // Insert User
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setString(1, username);
+                prepStatement.setString(2, password);
+                prepStatement.setInt(3, allocatedHall);
+                prepStatement.executeUpdate();
+                
+                // Get Last Insert Id
+                int userId = prepStatement.getGeneratedKeys().getInt(1);
+                
+                // Make sure permissions have been added
+                if(permissions.size() > 0) {
+                    // Create Permissions Insert Query
+                    String permQuery = "INSERT INTO `permissions` (`uid`, `name`) VALUES ";
+
+                    // Build Query
+                    permQuery = permissions.stream().map((_item) -> "(?, ?),").reduce(permQuery, String::concat);
+                    System.out.println(permQuery);
+
+                    // Change last comma to semi-colon
+                    permQuery = permQuery.substring(0, permQuery.length()-1) + ";";
+                    System.out.println(permQuery);
+
+                    // Prepare our Query
+                    prepStatement2 = Database._conn.prepareStatement(permQuery);
+
+                    // Prepare our Query with the values
+                    int counter = 1;
+                    for(String p: permissions) {
+                        prepStatement2.setInt(counter++, userId);
+                        prepStatement2.setString(counter++, p);
+                    }
+                    
+                    // Execute our permissions query
+                    prepStatement2.executeUpdate();
+                }
+            } catch(SQLException e) {
+                AccommodationSystem.debug("Database Error: " + e.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                    if(prepStatement2 != null) prepStatement2.close();
+                }catch(Exception x) { }
+            }
+        }
+    }
+    
+    public static boolean updateUser(Integer userId, String column, String value) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            String query = "UPDATE `users` SET `" + column + "` = ? WHERE `id` = ?";
+            
+            try {
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setString(1, value);
+                prepStatement.setInt(2, userId);
+                prepStatement.executeUpdate();
+                
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean updateUserPermissions(Integer userId, List<String> permissions) {
+        
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null;
+            
+            try {
+                // Delete old permissions
+                if(Database.deleteUser(userId, true)) {
+                    // Make sure permissions have been added
+                    if(permissions.size() > 0) {
+                        // Create Permissions Insert Query
+                        String permQuery = "INSERT INTO `permissions` (`uid`, `name`) VALUES ";
+
+                        // Build Query
+                        permQuery = permissions.stream().map((_item) -> "(?, ?),").reduce(permQuery, String::concat);
+                        System.out.println(permQuery);
+
+                        // Change last comma to semi-colon
+                        permQuery = permQuery.substring(0, permQuery.length()-1) + ";";
+                        System.out.println(permQuery);
+
+                        // Prepare our Query
+                        prepStatement = Database._conn.prepareStatement(permQuery);
+
+                        // Prepare our Query with the values
+                        int counter = 1;
+                        for(String p: permissions) {
+                            prepStatement.setInt(counter++, userId);
+                            prepStatement.setString(counter++, p);
+                        }
+
+                        // Execute our permissions query
+                        prepStatement.executeUpdate();
+                    }
+                }
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean deleteUser(Integer userId, boolean permsOnly) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null, prepStatement2 = null;
+            String query = "DELETE FROM `users` WHERE `id` = ?",
+                  query2 = "DELETE FROM `permissions` WHERE `uid` = ?";
+            
+            try {
+                if(!permsOnly) {
+                    prepStatement = Database._conn.prepareStatement(query);
+                    prepStatement.setInt(1, userId);
+                    prepStatement.executeUpdate();
+                }
+                
+                prepStatement2 = Database._conn.prepareStatement(query2);
+                prepStatement2.setInt(1, userId);
+                prepStatement2.executeUpdate();
+                
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                    if(prepStatement2 != null) prepStatement2.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
     public static List<Hall> getHalls() {        
         // Check if user is logged in
         if(!User.loggedIn())

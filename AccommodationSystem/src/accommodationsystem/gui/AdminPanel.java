@@ -20,6 +20,8 @@ import accommodationsystem.library.Table.UserRow;
 import com.sun.javafx.tk.FontMetrics;
 import com.sun.javafx.tk.Toolkit;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -175,12 +177,12 @@ public class AdminPanel extends GUI {
          */
         ObservableList<UserRow> users = FXCollections.observableArrayList();
         Database.getUsersAsRow().stream().forEach((user) -> {
-            users.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getRank()));
+            users.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getAllocatedHall()));
         });
         userId.setCellValueFactory(new PropertyValueFactory<>("Id"));
         userName.setCellValueFactory(new PropertyValueFactory<>("Username"));
         userPass.setCellValueFactory(new PropertyValueFactory<>("Password"));
-        userHall.setCellValueFactory(new PropertyValueFactory<>("Rank"));
+        userHall.setCellValueFactory(new PropertyValueFactory<>("AllocatedHall"));
         userPerms.setCellValueFactory(new PropertyValueFactory<>("Perms"));
         tbl.setItems(users);
         
@@ -208,7 +210,6 @@ public class AdminPanel extends GUI {
          * Add functionality to buttons
          */
         createButton.setOnAction((e) -> {
-            boolean error = false;
             String username = null, password = null;
             Integer allocatedHall = null;
             List<String> permissions = new ArrayList<>();
@@ -217,41 +218,46 @@ public class AdminPanel extends GUI {
             TextInputDialog tiDialog = new TextInputDialog();
             tiDialog.setHeaderText("Please enter a username");
             tiDialog.setContentText("Username:");
-            Optional<String> tiRes = tiDialog.showAndWait();
-            if(tiRes.isPresent()) {
-                // Username has been entered
-                username = tiRes.get();
-            } else error = true;
-            
-            // Error Check
-            if(error) return;
+            while(username == null || username.isEmpty()) {
+                Optional<String> tiRes = tiDialog.showAndWait();
+                if(tiRes.isPresent()) {
+                    // Username has been entered
+                    username = tiRes.get();
+                    
+                    // Username is empty
+                    if(username.isEmpty())
+                        new Alert(Alert.AlertType.ERROR, "Please enter a valid username.", ButtonType.OK).showAndWait();
+                }
+            }
             
             // Password Input
             TextInputDialog ti2Dialog = new TextInputDialog();
             ti2Dialog.setHeaderText("Please enter a password");
             ti2Dialog.setContentText("Password:");
-            Optional<String> ti2Res = ti2Dialog.showAndWait();
-            if(ti2Res.isPresent()) {
-                // Username has been entered
-                password = ti2Res.get();
-            } else error = true;
-            
-            // Error Check
-            if(error) return;
+            while(password == null || password.isEmpty()) {
+                Optional<String> ti2Res = ti2Dialog.showAndWait();
+                if(ti2Res.isPresent()) {
+                    // Password has been entered
+                    password = ti2Res.get();
+                    
+                    // Password is empty
+                    if(password.isEmpty())
+                        new Alert(Alert.AlertType.ERROR, "Please enter a valid password.", ButtonType.OK).showAndWait();
+                }
+            }
             
             // Allocated Hall Input
             List<String> hallNames = Database.getHallNames(true).stream().collect(Collectors.toList());
 
-            ChoiceDialog<String> cDialog = new ChoiceDialog<>("", hallNames);
+            ChoiceDialog<String> cDialog = new ChoiceDialog<>("All", hallNames);
             cDialog.setHeaderText("Please select a Hall Name");
             cDialog.setContentText("Please select a hall:");
-            Optional<String> cRes = cDialog.showAndWait();
-            if(cRes.isPresent()) {
-                allocatedHall = hallNames.indexOf(cRes.get());
-            } else error = true;
-            
-            // Error Check
-            if(error) return;
+            while(allocatedHall == null) {
+                Optional<String> cRes = cDialog.showAndWait();
+                if(cRes.isPresent()) {
+                    allocatedHall = hallNames.indexOf(cRes.get());
+                }
+            }
             
             // Add Permissions
             boolean finishedAddingPermissions = false;
@@ -261,10 +267,11 @@ public class AdminPanel extends GUI {
             perms.setHeaderText("Select permissions for " + username);
             perms.setContentText(contentText);
             
-            ButtonType addPerm = new ButtonType("Add Permission");
-            ButtonType delPerm = new ButtonType("Remove Permission");
-            ButtonType complete = new ButtonType("Create User", ButtonData.FINISH);
-            perms.getButtonTypes().setAll(addPerm, delPerm, complete);
+            ButtonType addPerm = new ButtonType("Add +");
+            ButtonType delPerm = new ButtonType("Remove -");
+            ButtonType complete = new ButtonType("Create User", ButtonData.OK_DONE);
+            ButtonType cancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+            perms.getButtonTypes().setAll(addPerm, delPerm, complete, cancel);
             
             while(!finishedAddingPermissions) {
                 Optional<ButtonType> res = perms.showAndWait();
@@ -272,8 +279,8 @@ public class AdminPanel extends GUI {
                     List<String> filteredPerms = new ArrayList<>();
                     Permissions.getPermissions().stream().forEach((p) -> { if(!permissions.contains(p)) filteredPerms.add(p); });
                     ChoiceDialog<String> apDialog = new ChoiceDialog<>("", filteredPerms);
-                    apDialog.setTitle("Add Permissions");
-                    apDialog.setHeaderText("Add Permissions");
+                    apDialog.setTitle("Add Permission");
+                    apDialog.setHeaderText("Add Permission");
                     apDialog.setContentText("Please select a permission to add:");
                     Optional<String> apRes = apDialog.showAndWait();
                     if(apRes.isPresent()) {
@@ -283,16 +290,25 @@ public class AdminPanel extends GUI {
                     List<String> filteredPerms = new ArrayList<>();
                     permissions.stream().forEach((p) -> filteredPerms.add(p));
                     ChoiceDialog<String> apDialog = new ChoiceDialog<>("", filteredPerms);
-                    apDialog.setTitle("Remove Permissions");
-                    apDialog.setHeaderText("Remove Permissions");
+                    apDialog.setTitle("Remove Permission");
+                    apDialog.setHeaderText("Remove Permission");
                     apDialog.setContentText("Please select a permission to remove:");
                     Optional<String> apRes = apDialog.showAndWait();
                     if(apRes.isPresent()) {
                         permissions.remove(permissions.indexOf(apRes.get()));
                     }
                 } else if(res.get() == complete) {
-                    System.out.println("finished");
+                    Database.createUser(username, password, allocatedHall, permissions);
+                    
+                    // Rebuild Table
+                    ObservableList<UserRow> newUsers = FXCollections.observableArrayList();
+                    Database.getUsersAsRow().stream().forEach((user) -> {
+                        newUsers.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getAllocatedHall()));
+                    });
+                    tbl.setItems(newUsers);
                     finishedAddingPermissions = true;
+                } else {
+                    return;
                 }
                 
                 // Update content
@@ -303,11 +319,203 @@ public class AdminPanel extends GUI {
         });
         
         editButton.setOnAction((e) -> {
-            System.out.println("edit button");
+            // Get Selected Item
+            UserRow urSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(urSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a User to delete!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Option Menu
+            List<String> opts = new ArrayList<>();
+            opts.add("Username");
+            opts.add("Password");
+            opts.add("Allocated Hall");
+            opts.add("Permissions");
+            
+            ChoiceDialog<String> cdOptions = new ChoiceDialog("Username", opts);
+            cdOptions.setTitle("Select an Option");
+            cdOptions.setHeaderText("Select an option to modify");
+            cdOptions.setContentText("Option:");
+            Optional<String> cdRes = cdOptions.showAndWait();
+            switch(cdRes.get()) {
+                case "Username": {
+                    String updString = null;
+                    TextInputDialog newUsername = new TextInputDialog();
+                    newUsername.setContentText("Username:");
+
+                    while(updString == null || updString.isEmpty()) {
+                        Optional<String> nuRes = newUsername.showAndWait();
+                        if(nuRes.isPresent()) {
+                            updString = nuRes.get();
+                            
+                            if(updString.isEmpty())
+                                new Alert(Alert.AlertType.ERROR, "Please input a valid username.", ButtonType.OK).showAndWait();
+                        } else {
+                            return;
+                        }
+                    }
+                    
+                    // Update username
+                    Database.updateUser(urSelected.getId(), "username", updString);
+                    new Alert(Alert.AlertType.CONFIRMATION, urSelected.getUsername() + " has been successfully updated.", ButtonType.OK).showAndWait();
+                }
+                break;
+                case "Password": {
+                    String updString = null;
+                    TextInputDialog newPassword = new TextInputDialog();
+                    newPassword.setContentText("Password:");
+
+                    while(updString == null || updString.isEmpty()) {
+                        Optional<String> npRes = newPassword.showAndWait();
+                        if(npRes.isPresent()) {
+                            updString = npRes.get();
+                            
+                            if(updString.isEmpty())
+                                new Alert(Alert.AlertType.ERROR, "Please input a valid password.", ButtonType.OK).showAndWait();
+                        } else {
+                            return;
+                        }
+                    }
+                    
+                    // Update password
+                    Database.updateUser(urSelected.getId(), "password", updString);
+                    new Alert(Alert.AlertType.CONFIRMATION, urSelected.getUsername() + " has been successfully updated.", ButtonType.OK).showAndWait();
+                }
+                break;
+                case "Allocated Hall": {
+                    Integer allocatedHall = null;
+                    List<String> hallNames = Database.getHallNames(true).stream().collect(Collectors.toList());
+                    
+                    ChoiceDialog<String> cDialog = new ChoiceDialog<>(hallNames.get(Integer.valueOf(urSelected.getAllocatedHall())), hallNames);
+                    cDialog.setHeaderText("Please select a Hall Name");
+                    cDialog.setContentText("Hall:");
+                    while(allocatedHall == null) {
+                        Optional<String> cRes = cDialog.showAndWait();
+                        if(cRes.isPresent()) {
+                            allocatedHall = hallNames.indexOf(cRes.get());
+                        } else {
+                            return;
+                        }
+                    }
+                    
+                    // Update allocated hall
+                    Database.updateUser(urSelected.getId(), "allocated_hall", allocatedHall.toString());
+                    new Alert(Alert.AlertType.CONFIRMATION, urSelected.getUsername() + " has been successfully updated.", ButtonType.OK).showAndWait();
+                }
+                break;
+                case "Permissions": {
+                    List<String> permissions = new ArrayList<>(Arrays.asList(urSelected.getPerms().split(",")));
+                    permissions.removeAll(Collections.singleton(""));
+                    
+                    boolean finishedAddingPermissions = false;
+                    String contentText = "Use the Add Permission button to add permissions to " + urSelected.getUsername() + "\n\nCurrent Permissions:";
+                    Alert perms = new Alert(Alert.AlertType.CONFIRMATION);
+                    perms.setTitle("Select Permissions");
+                    perms.setHeaderText("Select permissions for " + urSelected.getUsername());
+                    perms.setContentText((permissions.size() > 0) ? contentText + "\n- " + String.join("\n- ", permissions) : contentText);
+
+                    ButtonType addPerm = new ButtonType("Add +");
+                    ButtonType delPerm = new ButtonType("Remove -");
+                    ButtonType complete = new ButtonType("Create User", ButtonData.OK_DONE);
+                    ButtonType cancel = new ButtonType("Cancel", ButtonData.CANCEL_CLOSE);
+                    perms.getButtonTypes().setAll(addPerm, delPerm, complete, cancel);
+
+                    while(!finishedAddingPermissions) {
+                        Optional<ButtonType> res = perms.showAndWait();
+                        if(res.get() == addPerm) {
+                            List<String> filteredPerms = new ArrayList<>();
+                            Permissions.getPermissions().stream().forEach((p) -> { if(!permissions.contains(p)) filteredPerms.add(p); });
+                            ChoiceDialog<String> apDialog = new ChoiceDialog<>((filteredPerms.size() > 0) ? filteredPerms.get(0) : "", filteredPerms);
+                            apDialog.setTitle("Add Permission");
+                            apDialog.setHeaderText("Add Permission");
+                            apDialog.setContentText("Please select a permission to add:");
+                            Optional<String> apRes = apDialog.showAndWait();
+                            if(apRes.isPresent()) {
+                                if(!apRes.get().isEmpty())
+                                    permissions.add(apRes.get());
+                            }
+                        } else if(res.get() == delPerm) {
+                            List<String> filteredPerms = new ArrayList<>();
+                            permissions.stream().forEach((p) -> filteredPerms.add(p));
+                            ChoiceDialog<String> apDialog = new ChoiceDialog<>((filteredPerms.size() > 0) ? filteredPerms.get(0) : "", filteredPerms);
+                            apDialog.setTitle("Remove Permission");
+                            apDialog.setHeaderText("Remove Permission");
+                            apDialog.setContentText("Please select a permission to remove:");
+                            Optional<String> apRes = apDialog.showAndWait();
+                            if(apRes.isPresent()) {
+                                if(!apRes.get().isEmpty())
+                                    permissions.remove(permissions.indexOf(apRes.get()));
+                            }
+                        } else if(res.get() == complete) {
+                            // Update User Permissions
+                            Database.updateUserPermissions(urSelected.getId(), permissions);
+
+                            // Rebuild Table
+                            ObservableList<UserRow> newUsers = FXCollections.observableArrayList();
+                            Database.getUsersAsRow().stream().forEach((user) -> {
+                                newUsers.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getAllocatedHall()));
+                            });
+                            tbl.setItems(newUsers);
+                            finishedAddingPermissions = true;
+                            
+                            // Complete
+                            new Alert(Alert.AlertType.CONFIRMATION, urSelected.getUsername() + " has been successfully updated.", ButtonType.OK).showAndWait();
+                        } else {
+                            return;
+                        }
+
+                        // Update content
+                        perms.setContentText((permissions.size() > 0) ? contentText + "\n- " + String.join("\n- ", permissions) : contentText);
+                    }
+                }
+                break;
+                default: {
+                    new Alert(Alert.AlertType.ERROR, "Invalid option!", ButtonType.OK).showAndWait();
+                    return;
+                }
+            }
+            
+            // Rebuild Table
+            ObservableList<UserRow> newUsers = FXCollections.observableArrayList();
+            Database.getUsersAsRow().stream().forEach((user) -> {
+                newUsers.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getAllocatedHall()));
+            });
+            tbl.setItems(newUsers);
+            
         });
         
         deleteButton.setOnAction((e) -> {
-            System.out.println("delete button");
+            // Get Selected Item
+            UserRow urSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(urSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a User to delete!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Confirm Deletion
+            Alert confirmDeletion = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete " + urSelected.getUsername() + "?", ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> r = confirmDeletion.showAndWait();
+            if(r.get() == ButtonType.YES) {
+                // Deletion Confirmed
+                if(Database.deleteUser(urSelected.getId(), false)) {
+                    // Clear Table
+                    tbl.getItems().clear();
+                    
+                    // Rebuild Table
+                    ObservableList<UserRow> newUsers = FXCollections.observableArrayList();
+                    Database.getUsersAsRow().stream().forEach((user) -> {
+                        newUsers.add(new UserRow(user.getId(), user.getUsername(), user.getPassword(), user.getAllocatedHall()));
+                    });
+                    tbl.setItems(newUsers);
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Unable to delete user!", ButtonType.OK).showAndWait();
+                }
+            }
         });
         
         /**
