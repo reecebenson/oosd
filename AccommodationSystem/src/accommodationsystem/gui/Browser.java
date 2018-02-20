@@ -11,11 +11,16 @@ import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Database;
 import accommodationsystem.library.Lease.CleaningStatus;
 import accommodationsystem.library.Lease.Occupancy;
+import accommodationsystem.library.LeaseDuration;
 import accommodationsystem.library.Permissions;
 import com.sun.javafx.tk.Toolkit;
 import com.sun.javafx.tk.FontMetrics;
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -228,7 +233,7 @@ public class Browser extends GUI {
         if(_isSearching) {
             _isSearching = false;
             btnSearch.setText("🔍"); // Search Magnify Glass
-            this.buildTable(0);
+            this.buildTable(User.getAllocatedHall());
             return;
         }
         
@@ -399,7 +404,13 @@ public class Browser extends GUI {
      * @param   oldValue
      * @param   newValue 
      */
+    private boolean justChangedHallFilter = false;
     private void cbHalls_Changed(ComboBox cb, Object options, Object oldValue, Object newValue) {
+        if(justChangedHallFilter) {
+            justChangedHallFilter = false;
+            return;
+        }
+        
         /**
          * Cast Objects to Strings
          */
@@ -412,7 +423,18 @@ public class Browser extends GUI {
         /**
          * Update TableView to match ComboBox value
          */
-        this.buildTable(cb.getSelectionModel().getSelectedIndex());
+        int hallId = cb.getSelectionModel().getSelectedIndex();
+        if(User.getAllocatedHall() == 0)
+            this.buildTable(cb.getSelectionModel().getSelectedIndex());
+        else {
+            if(hallId == User.getAllocatedHall() || hallId == 0)
+                this.buildTable(User.getAllocatedHall());
+            else {
+                new Alert(Alert.AlertType.ERROR, "Unable to display data about '" + newVal + "'. You are allocated to Hall ID " + User.getAllocatedHall(), ButtonType.OK).showAndWait();
+                justChangedHallFilter = true;
+                Platform.runLater(() -> cb.setValue(oldValue));
+            }
+        }
     }
     
     /**
@@ -427,11 +449,6 @@ public class Browser extends GUI {
         /**
          * Check to see if we've just clicked another item
          */
-        /*if(justSelectedNewItem) {
-            justSelectedNewItem = false;
-            return;
-        }*/
-        
         /**
          * Cast Objects to Strings
          */
@@ -451,13 +468,12 @@ public class Browser extends GUI {
         /**
          * Check ComboBox Data
          */
-        if(!User.hasPermission(Permissions.MANAGE_OFFLINE) && newVal.equals("Offline")) {
-            justSelectedNewItem = true;
+        if(!User.hasPermission(Permissions.MANAGE_OFFLINE) && newVal.equals("Offline") && !justSelectedNewItem) {
             new Alert(Alert.AlertType.ERROR, "You do not have permissions to set a lease status to Offline.", ButtonType.OK).showAndWait();
             Platform.runLater(() -> comboChangeCleanStatus.setValue(lease.getCleanStatusName()));
         } else {
             // Check if trying to set Lease to Offline when lease is present
-            if(newVal.equals("Offline") && lease.getLeaseId() != null) {
+            if(newVal.equals("Offline") && lease.getLeaseId() != null && !justSelectedNewItem) {
                 new Alert(Alert.AlertType.ERROR, "Cannot set lease status to Offline when a lease is present.", ButtonType.OK).showAndWait();
                 Platform.runLater(() -> comboChangeCleanStatus.setValue(lease.getCleanStatusName()));
             } else {
@@ -470,6 +486,11 @@ public class Browser extends GUI {
                    this.buildTable(_currentHallView);
                }
             }
+        }
+        
+        
+        if(justSelectedNewItem) {
+            justSelectedNewItem = false;
         }
     }
     
@@ -636,13 +657,41 @@ public class Browser extends GUI {
             return;
         }
         
-        /**
-         * Rollback to Commit #341dec8d88edba7de831ba911629c8d40669b06a for Lease Duration in seconds
-         * Changed to Lease Duration for "Months"
-         */
+        // Get Lease Information
+        // DateFormat converts the string parsed to it in dd-MM-yyyy format
+        DateFormat convFormat = new SimpleDateFormat("dd-MM-yyyy");
+        DateFormat showFormat = new SimpleDateFormat("EEEEE, dd 'of' MMMMM, Y");
         
-        // Show Alert (Message) - getLeaseId() is formatted to a String to avoid the Message Formatter adding commas
-        String m = MessageFormat.format("The duration of Lease #{0} is {1} months.", lease.getLeaseId().toString(), lease.getDuration());
+        // Parse our lease's start/end dates to a Date Object
+        Date msStartDate, msEndDate;
+        try {
+            msStartDate = convFormat.parse(lease.getStartDate());
+            msEndDate = convFormat.parse(lease.getEndDate());
+        } catch(ParseException ex) {
+            // Something went wrong
+            new Alert(Alert.AlertType.ERROR, "There was an issue trying to retrieve the lease duration.", ButtonType.OK).showAndWait();
+            System.out.println("Parse Exception error: " + ex.getMessage());
+            return;
+        }
+        
+        // Conversions
+        int tsStart = (int)Math.floor(msStartDate.getTime() / 1000);
+        int tsEnd = (int)Math.floor(msEndDate.getTime() / 1000);
+        int tsNow = (int)Math.floor(System.currentTimeMillis() / 1000);
+        int secsLeft = (tsEnd - tsNow);
+        
+        // Debug
+        AccommodationSystem.debug("Timestamp Start: " + tsStart);
+        AccommodationSystem.debug("Timestamp End:" + tsEnd);
+        AccommodationSystem.debug("Timestamp Now: " + tsNow);
+        AccommodationSystem.debug("Seconds Left: " + secsLeft);
+        
+        // Create our LeaseDuration Object
+        LeaseDuration ld = new LeaseDuration(secsLeft);
+        
+        // Show Alert (Message)
+        String m = MessageFormat.format("Start Date: {0}\nEnd Date: {1}\n\nThis lease has {2} weeks, {3} days, {4} hours, {5} minutes and {6} seconds remaining.",
+                showFormat.format(msStartDate), showFormat.format(msEndDate), ld.getWeeks(), ld.getDays(), ld.getHours(), ld.getMinutes(), ld.getSeconds());
         Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         checkLeaseDur.showAndWait();
     }
@@ -745,7 +794,7 @@ public class Browser extends GUI {
         /**
          * Build Table
          */
-        this.buildTable(0);
+        this.buildTable(User.getAllocatedHall());
         
         /**
          * Compile Elements

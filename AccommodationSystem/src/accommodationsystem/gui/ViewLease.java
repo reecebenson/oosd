@@ -32,8 +32,13 @@ import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Permissions;
 import accommodationsystem.library.Student;
 import accommodationsystem.library.User;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Objects;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -66,13 +71,20 @@ public class ViewLease extends GUI {
     LeaseData leaseData;
     // Elements
     Button btnUpdate;
-    TextField leaseId;
+    TextField leaseId,
+            startDate,
+            endDate;
     ComboBox hallName,
             flatNumber,
             roomNumber,
             studentName,
             occupancy,
             cleanStatus;
+    SimpleIntegerProperty prevHallId,
+            prevFlatNumber,
+            prevRoomNumber;
+    // Checks
+    boolean hasChangedRoom = false;
     
     /**
      * @name    buildHeader
@@ -116,6 +128,8 @@ public class ViewLease extends GUI {
                 lblFlatNumber,
                 lblRoomNumber,
                 lblStudentName,
+                lblStartDate,
+                lblEndDate,
                 lblOccupancy,
                 lblCleanStatus;
         
@@ -130,6 +144,8 @@ public class ViewLease extends GUI {
         lblFlatNumber = new Label("Flat Number:");
         lblRoomNumber = new Label("Room Number:");
         lblStudentName = new Label("Student Name:");
+        lblStartDate = new Label("Start Date:");
+        lblEndDate = new Label("End Date:");
         lblOccupancy = new Label("Occupancy:");
         lblCleanStatus = new Label("Clean Status");
         // ComboBox
@@ -137,8 +153,14 @@ public class ViewLease extends GUI {
         hallName = new ComboBox(Database.getHallNames(false));
         flatNumber = new ComboBox(this.leaseData.getHall().getFlatsAsCollection());
         roomNumber = new ComboBox(this.leaseData.getHall().getRoomsAsCollection(this.leaseData.getFlatNumber()));
-        studentName = new ComboBox(Database.getStudentsAsCollection(false));
+        if(this.leaseData.getStudent() != null)
+            studentName = new ComboBox(Database.getStudentsAsCollection(false, this.leaseData.getStudentId()));
+        else
+            studentName = new ComboBox(Database.getStudentsAsCollection(false));
+        startDate = new TextField();
+        endDate = new TextField();
         occupancy = new ComboBox(Occupancy.getOccupancies());
+        
         cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
         /**
@@ -168,18 +190,21 @@ public class ViewLease extends GUI {
         hallName.setValue(this.leaseData.getHallName());
         hallName.setPrefWidth(225.0);
         hallName.setPadding(new Insets(11, 5, 11, 5));
+        hallName.setDisable(true);
         hallName.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> hallName_Changed(options, oldValue, newValue));
         // hallNumber ComboBox
         flatNumber.setStyle("-fx-text-fill: white");
         flatNumber.setValue(this.leaseData.getFlatNumber());
         flatNumber.setPrefWidth(225.0);
         flatNumber.setPadding(new Insets(11, 5, 11, 5));
+        flatNumber.setDisable(true);
         flatNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> flatNumber_Changed(options, oldValue, newValue));
         // roomNumber ComboBox
         roomNumber.setStyle("-fx-text-fill: white");
         roomNumber.setValue(this.leaseData.getRoomNumber());
         roomNumber.setPrefWidth(225.0);
         roomNumber.setPadding(new Insets(11, 5, 11, 5));
+        roomNumber.setDisable(true);
         roomNumber.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> roomNumber_Changed(options, oldValue, newValue));
         // studentName ComboBox
         studentName.setStyle("-fx-text-fill: white");
@@ -187,6 +212,28 @@ public class ViewLease extends GUI {
         studentName.setPrefWidth(225.0);
         studentName.setPadding(new Insets(11, 5, 11, 5));
         studentName.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> studentName_Changed(options, oldValue, newValue));
+        // Work Out Current Year
+        Calendar cal = Calendar.getInstance();
+        Date today = cal.getTime();
+        cal.add(Calendar.YEAR, 1);
+        Date nextYear = cal.getTime();
+        String yearToUse = (
+                (Integer.valueOf(new SimpleDateFormat("MM").format(today)) > 8) ?   // Check if the Month digit is above August (08)
+                    new SimpleDateFormat("yyyy").format(nextYear) :                 // If the current month is above 08, use next year (i.e. 2019)
+                    new SimpleDateFormat("yyyy").format(today)                      // If the current month is below 08, use the current year (i.e. 2018)
+                );
+        // startDate TextField
+        startDate.setStyle("-fx-text-fill: white");
+        startDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(new Date())); // Displays Current Date as 01-01-1970 for example
+        startDate.setDisable(true);
+        startDate.setPrefWidth(225.0);
+        startDate.setPadding(new Insets(11, 5, 11, 5));
+        // endDate TextField
+        endDate.setStyle("-fx-text-fill: white");
+        endDate.setText("31-08-" + yearToUse);
+        endDate.setDisable(true);
+        endDate.setPrefWidth(225.0);
+        endDate.setPadding(new Insets(11, 5, 11, 5));
         // occupancy ComboBox
         occupancy.setStyle("-fx-text-fill: white");
         occupancy.setValue(this.leaseData.getOccupiedStatus());
@@ -225,9 +272,6 @@ public class ViewLease extends GUI {
                  */
                 if(!User.hasPermission(Permissions.EDIT_LEASE)) {
                     leaseId.setDisable(true);
-                    hallName.setDisable(true);
-                    flatNumber.setDisable(true);
-                    roomNumber.setDisable(true);
                     occupancy.setDisable(true);
                     studentName.setDisable(true);
                 }
@@ -274,14 +318,20 @@ public class ViewLease extends GUI {
         // Student Name
         contentBox.add(lblStudentName, 0, 4);
         contentBox.add(studentName, 1, 4);
+        // Start Date
+        contentBox.add(lblStartDate, 0, 5);
+        contentBox.add(startDate, 1, 5);
+        // End Date
+        contentBox.add(lblEndDate, 0, 6);
+        contentBox.add(endDate, 1, 6);
         // Occupancy
-        contentBox.add(lblOccupancy, 0, 5);
-        contentBox.add(occupancy, 1, 5);
+        contentBox.add(lblOccupancy, 0, 7);
+        contentBox.add(occupancy, 1, 7);
         // Clean Status
-        contentBox.add(lblCleanStatus, 0, 6);
-        contentBox.add(cleanStatus, 1, 6);
+        contentBox.add(lblCleanStatus, 0, 8);
+        contentBox.add(cleanStatus, 1, 8);
         // Update Button
-        contentBox.add(btnUpdate, 1, 7);
+        contentBox.add(btnUpdate, 1, 9);
     }
     
     /**
@@ -357,6 +407,9 @@ public class ViewLease extends GUI {
         // Populate ComboBoxes
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
         flatNumber.setItems(tempHall.getFlatsAsCollection());
+        
+        // Update Flag
+        hasChangedRoom = true;
     }
     
     /**
@@ -397,6 +450,9 @@ public class ViewLease extends GUI {
         Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
         roomNumber.setItems(tempHall.getRoomsAsCollection((int)flatNumber.getSelectionModel().getSelectedItem()));
         AccommodationSystem.debug("populated rooms");
+        
+        // Update Flag
+        hasChangedRoom = true;
     }
     
     /**
@@ -425,6 +481,9 @@ public class ViewLease extends GUI {
         
         // Enable Update Lease button
         btnUpdate.setDisable(false);
+        
+        // Update Flag
+        hasChangedRoom = true;
     }
     
     /**
@@ -483,7 +542,7 @@ public class ViewLease extends GUI {
         
         // Validate and Sanitise inputs
         SimpleIntegerProperty tLeaseId, tHallId, tFlatNumber, tRoomNumber, tOccupiedState, tCleanStatus;
-        tOccupiedState = null;
+        tHallId = tFlatNumber = tRoomNumber = tOccupiedState = null;
         boolean dataIsValid = true;
         
         // Check User Permissions
@@ -513,6 +572,38 @@ public class ViewLease extends GUI {
                 tRoomNumber = new SimpleIntegerProperty((int)roomNumber.getSelectionModel().getSelectedItem());
                 this.leaseData.setRoomNumber(tRoomNumber);
             } else dataIsValid = false;
+            
+            // Check Occupancy of Hall>Flat>Room
+            if(dataIsValid) {
+                if(tHallId == null || tFlatNumber == null || tRoomNumber == null)
+                    dataIsValid = false;
+                else {
+                    LeaseData existantLease = Database.getLeaseByHFR(tHallId.intValue(), tFlatNumber.intValue(), tRoomNumber.intValue());
+                    
+                    // If our lease exists, double check our values
+                    if(existantLease != null) {
+                        // Check if we're trying to allocate our new values to an already existing lease
+                        if(prevHallId.intValue() != this.leaseData.getHallId() ||
+                                prevFlatNumber.intValue() != this.leaseData.getFlatNumber() ||
+                                prevRoomNumber.intValue() != this.leaseData.getRoomNumber()) {
+                            new Alert(Alert.AlertType.ERROR, "You cannot create or update a lease when another lease exists with the same hall, flat and room values.", ButtonType.OK).showAndWait();
+                            return;
+                        }
+                        
+                        // Check Occupied State
+                        if(existantLease.getOccupied() && existantLease.getStudentId() != this.leaseData.getStudentId().intValue()) {
+                            new Alert(Alert.AlertType.ERROR, "The selected Hall, Flat and Room Number already contains a tenant. Please use another room.", ButtonType.OK).showAndWait();
+                            return;
+                        }
+                        
+                        // Check Clean Status
+                        if(existantLease.getCleanStatusName().equals("Offline")) {
+                            new Alert(Alert.AlertType.ERROR, "You cannot create a lease which has a Cleaning Status of Offline.", ButtonType.OK).showAndWait();
+                            return;
+                        }
+                    }
+                }
+            }
 
             // Check Occupancy
             if(Occupancy.getOccupancies().contains((String)occupancy.getSelectionModel().getSelectedItem())) {
@@ -548,28 +639,26 @@ public class ViewLease extends GUI {
             } else dataIsValid = false;
         }
         
+        // Set our Start and End Dates
+        this.leaseData.setStartDate(startDate.getText());
+        this.leaseData.setEndDate(endDate.getText());
+        
         if(dataIsValid) {
             // Validate Lease ID
             if(Database.checkValidLeaseNumber(this.leaseData.getLeaseId()) || (Objects.equals(this.leaseData.getLeaseId(), previousLeaseId))) {
                 if(Database.updateLease(this.leaseData)) {
-                    System.out.println(this.leaseData.getStudentId() + " -> " + this.leaseData.getStudent().getFirstName() + " is what the lease data says!!!");
                     try {
-                        parent.buildTable(0);
+                        parent.buildTable(User.getAllocatedHall());
                         this.close();
                     } catch(Exception ex) { }
                 } else new Alert(Alert.AlertType.ERROR, "Unable to update lease.", ButtonType.OK).show();
             } else {
-                System.out.println(this.leaseData.getLeaseId());
-                System.out.println(previousLeaseId);
                 new Alert(Alert.AlertType.ERROR, "Lease ID is already in use.", ButtonType.OK).show();
                 this.leaseData.setLeaseId(new SimpleIntegerProperty(previousLeaseId));
             }
         } else {
             new Alert(Alert.AlertType.ERROR, "The data you have supplied is invalid.", ButtonType.OK).show();
         }
-        
-        
-        //boolean updateComplete = Database.updateLease(this.leaseData);
     }
     
     /**
@@ -578,6 +667,7 @@ public class ViewLease extends GUI {
      * 
      * @param   browser
      * @param   lease
+     * @param   showType
      * 
      * @throws  Exception 
      */
@@ -592,6 +682,13 @@ public class ViewLease extends GUI {
          */
         this.parent = browser;
         this.leaseData = lease;
+        
+        /**
+         * Cache Previous Data for use of comparison
+         */
+        prevHallId = new SimpleIntegerProperty(this.leaseData.getHallId());
+        prevFlatNumber = new SimpleIntegerProperty(this.leaseData.getFlatNumber());
+        prevRoomNumber = new SimpleIntegerProperty(this.leaseData.getRoomNumber());
         
         /**
          * Build "ViewPermissions" GUI
@@ -610,8 +707,8 @@ public class ViewLease extends GUI {
          */
         Integer _leaseId = this.leaseData.getLeaseId();
         super.setTitle((showType.substring(0,1).toUpperCase() + showType.substring(1).toLowerCase()) + " Lease: " + (leaseId == null ? "Unoccupied" : String.valueOf(_leaseId)));
-        super.setSize(250, 700);
-        super.finalise(false);
+        super.setSize(225, 800);
+        super.finalise(true);
     }
     
     @Override

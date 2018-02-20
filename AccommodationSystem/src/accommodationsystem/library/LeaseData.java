@@ -9,6 +9,8 @@ import accommodationsystem.library.Lease.Room;
 import accommodationsystem.library.Lease.Hall;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 /**
  *
@@ -24,8 +26,9 @@ public class LeaseData {
             leaseId,
             studentId,
             occupied,
-            cleanStatus,
-            duration;
+            cleanStatus;
+    private StringProperty startDate,
+            endDate;
     private Student student;
     private Hall hall;
     private Room room;
@@ -45,16 +48,17 @@ public class LeaseData {
      * @param   roomNumber
      * @param   leaseId
      * @param   studentId
-     * @param   duration
+     * @param   startDate
      */
-    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId, Integer duration) {
+    public LeaseData(Integer hallId, Integer flatNumber, Integer roomNumber, Integer leaseId, Integer studentId, String startDate, String endDate) {
         // Populate LeaseData
         this.hallId = new SimpleIntegerProperty(hallId);
         this.flatNumber = new SimpleIntegerProperty(flatNumber);
         this.roomNumber = new SimpleIntegerProperty(roomNumber);
         this.leaseId = new SimpleIntegerProperty(leaseId);
         this.studentId = new SimpleIntegerProperty(studentId);
-        this.duration = new SimpleIntegerProperty(duration);
+        this.startDate = new SimpleStringProperty(startDate);
+        this.endDate = new SimpleStringProperty(endDate);
         
         // Populate Student, Hall & CleaningStatus Objects
         this.student = Database.getStudentFromId(studentId);
@@ -266,11 +270,38 @@ public class LeaseData {
     }
 
     /**
-     * @name    getDuration
-     * @desc    Retrieve Lease Duration
-     * @return  IntegerProperty
+     * @name    getStartDate
+     * @desc    Retrieve Start Date
+     * @return  String
      */
-    public Integer getDuration() {
-        return duration.intValue();
+    public String getStartDate() {
+        return startDate.getValue();
+    }
+
+    /**
+     * @name    setStartDate
+     * @desc    Set the Start Date
+     * @param   startDate
+     */
+    public void setStartDate(String startDate) {
+        this.startDate = new SimpleStringProperty(startDate);
+    }
+
+    /**
+     * @name    getEndDate
+     * @desc    Retrieve End Date
+     * @return  String
+     */
+    public String getEndDate() {
+        return endDate.getValue();
+    }
+
+    /**
+     * @name    setEndDate
+     * @desc    Set the End Date
+     * @param   endDate 
+     */
+    public void setEndDate(String endDate) {
+        this.endDate = new SimpleStringProperty(endDate);
     }
 }

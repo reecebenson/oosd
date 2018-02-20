@@ -13,7 +13,6 @@ import accommodationsystem.library.Table.StudentRow;
 import accommodationsystem.library.Table.UserRow;
 import java.sql.*;
 import static java.sql.Types.NULL;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -58,7 +57,7 @@ public class Database {
             AccommodationSystem.debug("Unable to connect to database: '" + url + "'");
             AccommodationSystem.debug(e.getMessage());
             return null;
-        } catch(Exception e) {
+        } catch(ClassNotFoundException | SQLException e) {
             // Handle Error
             return null;
         }
@@ -142,9 +141,9 @@ public class Database {
         if(User.hasPermission(Permissions.ADMIN_PANEL))
         {
             // Get Halls
-            for(Hall h: Database.getHalls()) {
+            Database.getHalls().stream().forEach((h) -> {
                 hallList.add(new HallRow(h.getId(), h.getName(), h.getShortName(), h.getAddress(), h.getPostcode(), h.getPhone(), h.getRoomCount()));
-            }
+            });
         }
         
         return hallList;
@@ -177,8 +176,7 @@ public class Database {
         ObservableList<String> hallList = FXCollections.observableArrayList();
         
         // Check User Permissions
-        if(User.hasPermission(Permissions.VIEW_LEASES))
-        {
+        if(User.hasPermission(Permissions.VIEW_LEASES)) {
             // Are we adding the "All" tag?
             if(allTag)
                 hallList.add("All");
@@ -240,9 +238,9 @@ public class Database {
         if(User.hasPermission(Permissions.ADMIN_PANEL))
         {
             // Get Rooms
-            for(Room h: Database.getRooms()) {
+            Database.getRooms().stream().forEach((h) -> {
                 roomList.add(new RoomRow(h.getRoomId(), h.getHallId(), h.getOccupied(), h.getCleanStatus(), h.getMonthlyPrice()));
-            }
+            });
         }
         
         return roomList;
@@ -324,14 +322,41 @@ public class Database {
             List<Integer> assignedStudents = Database.getAssignedStudentsIds();
             
             // Filter Students
-            for(StudentRow s: Database.getStudentsAsRow()) {
+            Database.getStudentsAsRow().stream().forEach((s) -> {
                 if(allStudents)
                     studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
                 else {
                     if(!assignedStudents.contains(s.getId()))
                         studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
                 }
-            }
+            });
+        }
+        
+        return studentList;
+    }
+    
+    public static ObservableList<String> getStudentsAsCollection(boolean allStudents, int studentId) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return FXCollections.observableArrayList();
+        
+        // Initialise Leases List
+        ObservableList<String> studentList = FXCollections.observableArrayList();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES))
+        {
+            List<Integer> assignedStudents = Database.getAssignedStudentsIds();
+            
+            // Filter Students
+            Database.getStudentsAsRow().stream().forEach((s) -> {
+                if(allStudents)
+                    studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
+                else {
+                    if(!assignedStudents.contains(s.getId()) || s.getId() == studentId)
+                        studentList.add(s.getId() + ": " + s.getFirstName() + " " + s.getLastName());
+                }
+            });
         }
         
         return studentList;
@@ -411,7 +436,7 @@ public class Database {
                 }
 
                 while(resultSet.next()) {
-                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getInt("lease_duration")));
+                    leases.add(new LeaseData(resultSet.getInt("hall_id"), resultSet.getInt("flat_id"), resultSet.getInt("room_id"), resultSet.getInt("lease_id"), resultSet.getInt("student_id"), resultSet.getString("lease_start_date"), resultSet.getString("lease_end_date")));
                 }
             } catch(SQLException e) {
                 AccommodationSystem.debug(e.getMessage());
@@ -538,7 +563,7 @@ public class Database {
         // Update Lease
         boolean updateComplete = false;
         PreparedStatement prepStatement = null, prepStatement2 = null;
-        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ?, `lease_duration` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+        String query = "UPDATE `leases` SET `lease_id` = ?, `student_id` = ?, `room_id` = ?, `flat_id` = ?, `hall_id` = ?, `lease_start_date` = ?, `lease_end_date` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
         String query3 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
 
         try {
@@ -548,10 +573,11 @@ public class Database {
             prepStatement.setInt(3, lease.getRoom().getRoomId());
             prepStatement.setInt(4, lease.getRoom().getFlatId());
             prepStatement.setInt(5, lease.getRoom().getHallId());
-            prepStatement.setInt(6, 12);
-            prepStatement.setInt(7, lease.getRoom().getRoomId());
-            prepStatement.setInt(8, lease.getRoom().getFlatId());
-            prepStatement.setInt(9, lease.getRoom().getHallId());
+            prepStatement.setString(6, lease.getStartDate());
+            prepStatement.setString(7, lease.getEndDate());
+            prepStatement.setInt(8, lease.getRoom().getRoomId());
+            prepStatement.setInt(9, lease.getRoom().getFlatId());
+            prepStatement.setInt(10, lease.getRoom().getHallId());
             prepStatement.executeUpdate();
 
             prepStatement2 = Database._conn.prepareStatement(query3);
@@ -585,16 +611,12 @@ public class Database {
         
         // Check User Permissions
         if(User.hasPermission(Permissions.EDIT_LEASE)) {
-            System.out.println("UPDATELEASE: lease data -> " + lease.getStudent().getFirstName());
             updateComplete = updateLeaseData(lease);
-            System.out.println("UPDATELEASE: lease data (after update) -> " + lease.getStudent().getFirstName());
         } else AccommodationSystem.debug("User does not have permission for 'EDIT_LEASE'");
         
         // Check User Permissions
         if(User.hasPermission(Permissions.EDIT_CLEAN)) {
-            System.out.println("UPDATECLEAN: lease data -> " + lease.getStudent().getFirstName());
             updateComplete = updateRoom(lease);
-            System.out.println("UPDATECLEAN: lease data (after update) -> " + lease.getStudent().getFirstName());
         } else AccommodationSystem.debug("User does not have permission for 'EDIT_CLEAN'");
         
         if(updateComplete)
@@ -644,16 +666,18 @@ public class Database {
         // Check User Permissions
         if(User.hasPermission(Permissions.DELETE_LEASE)) {
             PreparedStatement prepStatement = null, prepStatement2 = null;
-            String query = "UPDATE `leases` SET `student_id` = ?, `lease_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+            String query = "UPDATE `leases` SET `student_id` = ?, `lease_id` = ?, `lease_start_date` = ?, `lease_end_date` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
             String query2 = "UPDATE `rooms` SET `occupied` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
             
             try {
                 prepStatement = Database._conn.prepareStatement(query);
                 prepStatement.setNull(1, NULL);
                 prepStatement.setNull(2, NULL);
-                prepStatement.setInt(3, lease.getRoom().getRoomId());
-                prepStatement.setInt(4, lease.getRoom().getFlatId());
-                prepStatement.setInt(5, lease.getRoom().getHallId());
+                prepStatement.setNull(3, NULL);
+                prepStatement.setNull(4, NULL);
+                prepStatement.setInt(5, lease.getRoom().getRoomId());
+                prepStatement.setInt(6, lease.getRoom().getFlatId());
+                prepStatement.setInt(7, lease.getRoom().getHallId());
                 prepStatement.executeUpdate();
                 
                 prepStatement2 = Database._conn.prepareStatement(query2);
@@ -730,5 +754,32 @@ public class Database {
         }
         
         return false;
+    }
+    
+    public static LeaseData getLeaseByHFR(int hallId, int flatNumber, int roomNumber) {
+        // Get all of our leases in the particular hall to sort through
+        List<LeaseData> leases = Database.getLeases(0);
+        
+        // Check if we have a lease that matches our arguments
+        for(LeaseData l: leases) {
+            if(l.getHallId() == hallId && l.getFlatNumber() == flatNumber && l.getRoomNumber() == roomNumber) {
+                return l;
+            }
+        }
+        
+        // Fallback
+        return null;
+    }
+    
+    public static String checkLeaseStatus(int hallId, int flatNumber, int roomNumber) {
+        // Get the Lease
+        LeaseData l = Database.getLeaseByHFR(hallId, flatNumber, roomNumber);
+        return (l != null ? l.getCleanStatusName() : null);
+    }
+    
+    public static boolean checkOccupancyOfRoom(int hallId, int flatNumber, int roomNumber) {
+        // Get the Lease
+        LeaseData l = Database.getLeaseByHFR(hallId, flatNumber, roomNumber);
+        return (l != null ? l.getOccupied() : false);
     }
 }
