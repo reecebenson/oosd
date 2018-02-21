@@ -81,23 +81,24 @@ public class Browser extends GUI {
     // Table
     TableView<LeaseData> tbl = new TableView<>();
     Button btnCreateLease,
-            btnViewLease,
-            btnDeleteLease,
-            btnSearch;
-    ComboBox comboChangeCleanStatus;
+           btnViewLease,
+           btnDeleteLease,
+           btnSearch;
+    ComboBox comboChangeCleanStatus,
+             cbHalls;
     private int _currentHallView = -1;
     private boolean _isSearching = false;
     
     // Table Context Menu
     ContextMenu rightClickMenu;
     MenuItem miViewLease,
-            miUpdateLease,
-            miDeleteLease,
-            miCheckLeaseDuration,
-            miViewStudent,
-            miRoomPrice,
-            miRoomLocation,
-            miHallLocation;
+             miUpdateLease,
+             miDeleteLease,
+             miCheckLeaseDuration,
+             miViewStudent,
+             miRoomPrice,
+             miRoomLocation,
+             miHallLocation;
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
@@ -117,7 +118,6 @@ public class Browser extends GUI {
         Region headerSpacer = new Region();
         FlowPane btnStrip = new FlowPane(Orientation.HORIZONTAL, 10, 10);
         // Buttons
-        ComboBox cbHalls;
         Button btnAdminPanel = new Button();
         Button btnLogout = new Button();
         btnSearch = new Button();
@@ -163,7 +163,7 @@ public class Browser extends GUI {
         cbHalls = new ComboBox(Database.getHallNames(true));
         cbHalls.setStyle("-fx-text-fill: white");
         cbHalls.setPadding(new Insets(11, 5, 11, 5));
-        cbHalls.setValue("All");
+        cbHalls.setValue("0: All");
         cbHalls.setPrefWidth(150.0);
         cbHalls.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> cbHalls_Changed(cbHalls, options, oldValue, newValue));
         // Administrator Panel
@@ -222,6 +222,9 @@ public class Browser extends GUI {
         try {
             new AdminPanel().getStage().showAndWait();
             this.buildTable(0);
+            this.cbHalls.getItems().clear();
+            this.cbHalls.setValue("0: All"); 
+            this.cbHalls.setItems(Database.getHallNames(true));
         } catch(Exception e) { }
     }
     
@@ -243,7 +246,7 @@ public class Browser extends GUI {
         
         List<String> choices = new ArrayList<>();
         choices.add("Student Name");
-        choices.add("Hall Name");
+        if(User.getAllocatedHall() == 0) choices.add("Hall Name");
         choices.add("Flat Number");
         choices.add("Room Number");
         choices.add("Cleaning Status");
@@ -265,8 +268,12 @@ public class Browser extends GUI {
                     if(snRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getStudentName().toLowerCase().contains(snRes.get().toLowerCase())) {
-                                sortedLeases.add(l);
+                            // Check if the User has permission to view all halls
+                            if(User.getAllocatedHall() == 0 || l.getHallId() == User.getAllocatedHall()) {
+                                // Add lease to list
+                                if(l.getStudentName().toLowerCase().contains(snRes.get().toLowerCase())) {
+                                    sortedLeases.add(l);
+                                }
                             }
                         }
                         
@@ -285,7 +292,7 @@ public class Browser extends GUI {
                     if(cRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getHallName().equals(cRes.get())) {
+                            if(l.getHallId().equals(Database.getIdFromString(cRes.get()))) {
                                 sortedLeases.add(l);
                             }
                         }
@@ -306,8 +313,12 @@ public class Browser extends GUI {
                     if(cRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getFlatNumber().toString().equals(cRes.get())) {
-                                sortedLeases.add(l);
+                            // Check if the User has permission to view all halls
+                            if(User.getAllocatedHall() == 0 || l.getHallId() == User.getAllocatedHall()) {
+                                // Add lease to list
+                                if(l.getFlatNumber().toString().equals(cRes.get())) {
+                                    sortedLeases.add(l);
+                                }
                             }
                         }
                         
@@ -327,8 +338,12 @@ public class Browser extends GUI {
                     if(cRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getRoomNumber().toString().equals(cRes.get())) {
-                                sortedLeases.add(l);
+                            // Check if the User has permission to view all halls
+                            if(User.getAllocatedHall() == 0 || l.getHallId() == User.getAllocatedHall()) {
+                                // Add lease to list
+                                if(l.getRoomNumber().toString().equals(cRes.get())) {
+                                    sortedLeases.add(l);
+                                }
                             }
                         }
                         
@@ -346,8 +361,12 @@ public class Browser extends GUI {
                     if(cRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getCleanStatusName().equals(cRes.get())) {
-                                sortedLeases.add(l);
+                            // Check if the User has permission to view all halls
+                            if(User.getAllocatedHall() == 0 || l.getHallId() == User.getAllocatedHall()) {
+                                // Add lease to list
+                                if(l.getCleanStatusName().equals(cRes.get())) {
+                                    sortedLeases.add(l);
+                                }
                             }
                         }
                         
@@ -365,8 +384,12 @@ public class Browser extends GUI {
                     if(cRes.isPresent()) {
                         List<LeaseData> sortedLeases = new ArrayList<>();
                         for(LeaseData l: leases) {
-                            if(l.getOccupiedStatus().equals(cRes.get())) {
-                                sortedLeases.add(l);
+                            // Check if the User has permission to view all halls
+                            if(User.getAllocatedHall() == 0 || l.getHallId() == User.getAllocatedHall()) {
+                                // Add lease to list
+                                if(l.getOccupiedStatus().equals(cRes.get())) {
+                                    sortedLeases.add(l);
+                                }
                             }
                         }
                         
@@ -410,7 +433,10 @@ public class Browser extends GUI {
      */
     private boolean justChangedHallFilter = false;
     private void cbHalls_Changed(ComboBox cb, Object options, Object oldValue, Object newValue) {
-        if(justChangedHallFilter) {
+        /**
+         * Returners
+         */
+        if(justChangedHallFilter || cb.getSelectionModel().getSelectedItem() == null) {
             justChangedHallFilter = false;
             return;
         }
@@ -421,15 +447,17 @@ public class Browser extends GUI {
         String oldVal = (String)oldValue;
         String newVal = (String)newValue;
         
-        // Debug
+        /**
+         * Debug
+         */
         AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + cb.getSelectionModel().getSelectedIndex());
         
         /**
          * Update TableView to match ComboBox value
          */
-        int hallId = cb.getSelectionModel().getSelectedIndex();
+        int hallId = Database.getIdFromString((String)cb.getSelectionModel().getSelectedItem());
         if(User.getAllocatedHall() == 0)
-            this.buildTable(cb.getSelectionModel().getSelectedIndex());
+            this.buildTable(hallId);
         else {
             if(hallId == User.getAllocatedHall() || hallId == 0)
                 this.buildTable(User.getAllocatedHall());
@@ -789,6 +817,12 @@ public class Browser extends GUI {
         miCheckLeaseDuration.setDisable((lease.getLeaseId() == null));
         miViewStudent.setDisable((lease.getLeaseId() == null));
         miHallLocation.setDisable(false);
+        
+        // Permission Check for Right Click Menu Items
+        if(!User.hasPermission(Permissions.EDIT_LEASE)) {
+            miUpdateLease.setDisable(true);
+            miDeleteLease.setDisable(true);
+        }
         
         // Debug
         AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());

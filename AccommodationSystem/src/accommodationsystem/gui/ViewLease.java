@@ -4,24 +4,6 @@
  */
 package accommodationsystem.gui;
 
-/**
- * TODO:
- * 
- * D Import all available rooms into `rooms` table in database
- * D When updating Hall Name: Flat ID and Room ID should be set to empty, "Update" button should be disabled
- * D When updating Flat ID: Room ID should be set to empty, "Update" button should be disabled
- * D When updating values: check against database for clashes against leases existing for room etc
- * - When updating values: update values according to database
- * 
- * - Manager:
- *   > able to edit Lease Number and Student Name
- *   > able to edit the occupancy state
- *   > check Lease Number when updating lease to check that the Lease Number does not already exist
- * 
- * - Warden:
- *   > able to change the cleaning status (only)
- */
-
 import accommodationsystem.AccommodationSystem;
 import accommodationsystem.bases.GUI;
 import accommodationsystem.library.Lease.CleaningStatus;
@@ -187,7 +169,7 @@ public class ViewLease extends GUI {
         leaseId.textProperty().addListener((options, oldValue, newValue) -> leaseId_Changed(options, oldValue, newValue));
         // hallName ComboBox
         hallName.setStyle("-fx-text-fill: white");
-        hallName.setValue(this.leaseData.getHallName());
+        hallName.setValue(this.leaseData.getHallId() + ": " + this.leaseData.getHallName());
         hallName.setPrefWidth(225.0);
         hallName.setPadding(new Insets(11, 5, 11, 5));
         hallName.setDisable(true);
@@ -405,7 +387,7 @@ public class ViewLease extends GUI {
         roomNumber.setValue(null);
         
         // Populate ComboBoxes
-        Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
+        Hall tempHall = Database.getHall(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()));
         flatNumber.setItems(tempHall.getFlatsAsCollection());
         
         // Update Flag
@@ -447,9 +429,8 @@ public class ViewLease extends GUI {
         roomNumber.setValue(null);
         
         // Populate ComboBoxes
-        Hall tempHall = Database.getHall(hallName.getSelectionModel().getSelectedIndex() + 1);
+        Hall tempHall = Database.getHall(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()));
         roomNumber.setItems(tempHall.getRoomsAsCollection((int)flatNumber.getSelectionModel().getSelectedItem()));
-        AccommodationSystem.debug("populated rooms");
         
         // Update Flag
         hasChangedRoom = true;
@@ -556,8 +537,8 @@ public class ViewLease extends GUI {
             } else dataIsValid = false;
 
             // Check Hall ID
-            if((hallName.getSelectionModel().getSelectedIndex() + 1) >= 1 && (hallName.getSelectionModel().getSelectedIndex() + 1) <= Database.getHallNames(false).size()) {
-                tHallId = new SimpleIntegerProperty(hallName.getSelectionModel().getSelectedIndex() + 1);
+            if(Database.getHallIds(false).contains(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()))) {
+                tHallId = new SimpleIntegerProperty(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()));
                 this.leaseData.setHallId(tHallId);
             } else dataIsValid = false;
 
@@ -654,7 +635,8 @@ public class ViewLease extends GUI {
                 } else new Alert(Alert.AlertType.ERROR, "Unable to update lease.", ButtonType.OK).show();
             } else {
                 new Alert(Alert.AlertType.ERROR, "Lease ID is already in use.", ButtonType.OK).show();
-                this.leaseData.setLeaseId(new SimpleIntegerProperty(previousLeaseId));
+                if(previousLeaseId != null)
+                    this.leaseData.setLeaseId(new SimpleIntegerProperty(previousLeaseId));
             }
         } else {
             new Alert(Alert.AlertType.ERROR, "The data you have supplied is invalid.", ButtonType.OK).show();

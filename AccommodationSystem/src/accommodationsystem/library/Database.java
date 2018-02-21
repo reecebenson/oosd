@@ -15,6 +15,7 @@ import java.sql.*;
 import static java.sql.Types.NULL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -348,18 +349,41 @@ public class Database {
         if(!User.loggedIn())
             return FXCollections.observableArrayList("");
         
-        // Initialise Leases List
+        // Initialise Hall List
         ObservableList<String> hallList = FXCollections.observableArrayList();
         
         // Check User Permissions
         if(User.hasPermission(Permissions.VIEW_LEASES)) {
             // Are we adding the "All" tag?
             if(allTag)
-                hallList.add("All");
+                hallList.add("0: All");
             
             // Get Hall Names
             Database.getHalls().stream().forEach((h) -> {
-                hallList.add(h.getName());
+                hallList.add(h.getId() + ": " + h.getName());
+            });
+        }
+        
+        return hallList;
+    }
+    
+    public static List<Integer> getHallIds(boolean allTag) {
+        // > Check if user is logged in
+        if(!User.loggedIn())
+            return new ArrayList<>();
+        
+        // Initialise Hall List
+        List<Integer> hallList = new ArrayList<>();
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.VIEW_LEASES)) {
+            // Are we adding the "All" tag?
+            if(allTag)
+                hallList.add(0);
+            
+            // Get Hall IDs
+            Database.getHalls().stream().forEach((h) -> {
+                hallList.add(h.getId());
             });
         }
         
@@ -1030,19 +1054,35 @@ public class Database {
         
         // Check User Permissions
         if(User.hasPermission(Permissions.ADMIN_PANEL)) {
-            PreparedStatement prepStatement = null;
-            String query = "DELETE FROM `halls` WHERE `id` = ?";
+            PreparedStatement prepStatement1 = null, prepStatement2 = null, prepStatement3 = null;
+            String query = "DELETE FROM `halls` WHERE `id` = ?",
+                  query2 = "DELETE FROM `rooms` WHERE `hall_id` = ?",
+                  query3 = "DELETE FROM `leases` WHERE `hall_id` = ?";
             
             try {
-                prepStatement = Database._conn.prepareStatement(query);
-                prepStatement.setInt(1, hallId);
-                prepStatement.executeUpdate();
+                // Delete Hall
+                prepStatement1 = Database._conn.prepareStatement(query);
+                prepStatement1.setInt(1, hallId);
+                prepStatement1.executeUpdate();
+                
+                // Delete Rooms
+                prepStatement2 = Database._conn.prepareStatement(query2);
+                prepStatement2.setInt(1, hallId);
+                prepStatement2.executeUpdate();
+                
+                // Delete Leases
+                prepStatement3 = Database._conn.prepareStatement(query3);
+                prepStatement3.setInt(1, hallId);
+                prepStatement3.executeUpdate();
+                
                 return true;
             } catch(SQLException ex) {
                 AccommodationSystem.debug(ex.getMessage());
             } finally {
                 try {
-                    if(prepStatement != null) prepStatement.close();
+                    if(prepStatement1 != null) prepStatement1.close();
+                    if(prepStatement2 != null) prepStatement2.close();
+                    if(prepStatement3 != null) prepStatement3.close();
                 } catch(Exception x) {}
             }
         }
@@ -1117,7 +1157,7 @@ public class Database {
                 prepStatement.executeUpdate();
                 
                 // Remove Lease
-                prepStatement2 = Database._conn.prepareStatement(query);
+                prepStatement2 = Database._conn.prepareStatement(query2);
                 prepStatement2.setInt(1, hallId);
                 prepStatement2.setInt(2, flatId);
                 prepStatement2.setInt(3, roomId);
@@ -1134,5 +1174,9 @@ public class Database {
         }
         
         return false;
+    }
+    
+    public static Integer getIdFromString(String s) {
+        return (s.contains(":") ? Integer.valueOf(s.split(":")[0]) : null);
     }
 }

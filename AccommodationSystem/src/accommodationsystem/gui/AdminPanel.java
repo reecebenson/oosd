@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -279,7 +280,7 @@ public class AdminPanel extends GUI {
         PasswordField udPassword = new PasswordField();
         udPassword.setPromptText("Password");
         ComboBox udAllocatedHall = new ComboBox(Database.getHallNames(true));
-        udAllocatedHall.setValue("All");
+        udAllocatedHall.setValue("0: All");
         
         // Add to User Grid
         userGrid.add(new Label("Username:"), 0, 0);
@@ -295,9 +296,10 @@ public class AdminPanel extends GUI {
         for(String p: Permissions.getPermissions()) {
             CheckBox permBox = new CheckBox(p);
             permBox.setSelected(false);
+            permBox.setMnemonicParsing(false);
             userGrid.add(permBox, 1, ++curCount);
         }
-
+        
         // Setup Grid
         userDialog.getDialogPane().setContent(userGrid);
         
@@ -325,7 +327,8 @@ public class AdminPanel extends GUI {
             // Reset Elements
             udUsername.setText("");
             udPassword.setText("");
-            udAllocatedHall.setValue("All");
+            udAllocatedHall.setValue("0: All");
+            udAllocatedHall.setItems(Database.getHallNames(true));
             
             // Generate Checkboxes for permissions
             userGrid.getChildren().stream().forEach((Node n) -> {
@@ -358,7 +361,7 @@ public class AdminPanel extends GUI {
                         });
                         
                         // Create User
-                        Database.createUser(udUsername.getText(), udPassword.getText(), udAllocatedHall.getSelectionModel().getSelectedIndex(), permissions);
+                        Database.createUser(udUsername.getText(), udPassword.getText(), Database.getIdFromString((String)udAllocatedHall.getSelectionModel().getSelectedItem()), permissions);
 
                         // Rebuild Table
                         ObservableList<UserRow> newUsers = FXCollections.observableArrayList();
@@ -375,7 +378,7 @@ public class AdminPanel extends GUI {
         });
         
         // Edit Button
-        editButton.setOnAction((e) -> {
+        editButton.setOnAction((ActionEvent e) -> {
             // Get Selected Item
             UserRow urSelected = tbl.getSelectionModel().getSelectedItem();
             
@@ -407,7 +410,8 @@ public class AdminPanel extends GUI {
             // Set Values
             udUsername.setText(urSelected.getUsername());
             udPassword.setText(urSelected.getPassword());
-            udAllocatedHall.setValue(udAllocatedHall.getItems().get(Integer.valueOf(urSelected.getAllocatedHall())));
+            udAllocatedHall.setItems(Database.getHallNames(true));
+            udAllocatedHall.setValue(Database.getHallNames(true).stream().filter((String s) -> s.contains(urSelected.getAllocatedHall())).collect(Collectors.toList()).get(0));
             
             // Set Permissions
             List<String> urPermissions = new ArrayList<>(Arrays.asList(urSelected.getPerms().split(",")));
@@ -444,7 +448,7 @@ public class AdminPanel extends GUI {
                         // Update User
                         Database.updateUser(urSelected.getId(), "username", udUsername.getText());
                         Database.updateUser(urSelected.getId(), "password", udPassword.getText());
-                        Database.updateUser(urSelected.getId(), "allocated_hall", String.valueOf(udAllocatedHall.getSelectionModel().getSelectedIndex()));
+                        Database.updateUser(urSelected.getId(), "allocated_hall", String.valueOf(Database.getIdFromString((String)udAllocatedHall.getSelectionModel().getSelectedItem())));
                         Database.updateUserPermissions(urSelected.getId(), permissions);
 
                         // Rebuild Table
@@ -900,18 +904,28 @@ public class AdminPanel extends GUI {
             Optional<Boolean> result = roomDialog.showAndWait();
             if(result.isPresent()) {
                 if(result.get()) {
-                    // Validate Hall Stuff
+                    // Validate Room Stuff
                     if(!(rdHallId.getText().isEmpty() && rdFlatId.getText().isEmpty() && rdRoomId.getText().isEmpty() && rdMonthlyPrice.getText().isEmpty())) {
-                        // Create Room & Lease
-                        Database.createRoom(new Room(Integer.valueOf(rdRoomId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdHallId.getText()), 0, 0, Integer.valueOf(rdMonthlyPrice.getText())));
-                        
-                        // Rebuild Table
-                        tbl.getItems().clear();
-                        ObservableList<RoomRow> rbRooms = FXCollections.observableArrayList();
-                        Database.getRoomsAsRow().stream().forEach((r) -> {
-                            rbRooms.add(new RoomRow(r.getRoomId(), r.getFlatId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
-                        });
-                        tbl.setItems(rbRooms);
+                        // Validate Hall ID
+                        if(Database.getHallIds(false).contains(Integer.valueOf(rdHallId.getText()))) {
+                            // Validate HFR IDs
+                            if(Database.getLeaseByHFR(Integer.valueOf(rdHallId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdRoomId.getText())) == null) {
+                                // Create Room & Lease
+                                Database.createRoom(new Room(Integer.valueOf(rdRoomId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdHallId.getText()), 0, 0, Integer.valueOf(rdMonthlyPrice.getText())));
+
+                                // Rebuild Table
+                                tbl.getItems().clear();
+                                ObservableList<RoomRow> rbRooms = FXCollections.observableArrayList();
+                                Database.getRoomsAsRow().stream().forEach((r) -> {
+                                    rbRooms.add(new RoomRow(r.getRoomId(), r.getFlatId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
+                                });
+                                tbl.setItems(rbRooms);
+                            } else {
+                                new Alert(Alert.AlertType.ERROR, "Unable to create Room! A room already exists with the inputted Hall Id, Flat Id and Room Id.", ButtonType.OK).showAndWait();
+                            }
+                        } else {
+                            new Alert(Alert.AlertType.ERROR, "Unable to create Room! Please select a valid Hall ID.", ButtonType.OK).showAndWait();
+                        }
                     } else {
                         new Alert(Alert.AlertType.ERROR, "Unable to create Room!", ButtonType.OK).showAndWait();
                     }
