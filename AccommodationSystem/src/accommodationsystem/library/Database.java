@@ -1049,4 +1049,90 @@ public class Database {
         
         return false;
     }
+    
+    public static boolean createRoom(Room roomData) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null, prepStatement2 = null;
+            String query = "INSERT INTO `rooms` (`hall_id`, `flat_id`, `room_id`, `occupied`, `clean_status`, `monthly_price`) VALUES (?, ?, ?, ?, ?, ?)",
+                  query2 = "INSERT INTO `leases` (`hall_id`, `flat_id`, `room_id`, `lease_id`, `student_id`, `lease_start_date`, `lease_end_date`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            
+            try {
+                // Create Room
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setInt(1, roomData.getHallId());
+                prepStatement.setInt(2, roomData.getFlatId());
+                prepStatement.setInt(3, roomData.getRoomId());
+                prepStatement.setInt(4, roomData.getOccupied());
+                prepStatement.setInt(5, roomData.getCleanStatus());
+                prepStatement.setInt(6, roomData.getMonthlyPrice());
+                prepStatement.executeUpdate();
+                
+                // Create Offline Lease
+                prepStatement2 = Database._conn.prepareStatement(query2);
+                prepStatement2.setInt(1, roomData.getHallId());
+                prepStatement2.setInt(2, roomData.getFlatId());
+                prepStatement2.setInt(3, roomData.getRoomId());
+                prepStatement2.setNull(4, NULL);
+                prepStatement2.setNull(5, NULL);
+                prepStatement2.setNull(6, NULL);
+                prepStatement2.setNull(7, NULL);
+                prepStatement2.executeUpdate();
+                
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                    if(prepStatement2 != null) prepStatement2.close();
+                }catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
+    
+    public static boolean deleteRoom(Integer hallId, Integer flatId, Integer roomId) {
+        // Check user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Check User Permissions
+        if(User.hasPermission(Permissions.ADMIN_PANEL)) {
+            PreparedStatement prepStatement = null, prepStatement2 = null;
+            String query = "DELETE FROM `rooms` WHERE `hall_id` = ? AND `flat_id` = ? AND `room_id` = ?",
+                  query2 = "DELETE FROM `leases` WHERE `hall_id` = ? AND `flat_id` = ? AND `room_id` = ?";
+            
+            try {
+                // Remove Room
+                prepStatement = Database._conn.prepareStatement(query);
+                prepStatement.setInt(1, hallId);
+                prepStatement.setInt(2, flatId);
+                prepStatement.setInt(3, roomId);
+                prepStatement.executeUpdate();
+                
+                // Remove Lease
+                prepStatement2 = Database._conn.prepareStatement(query);
+                prepStatement2.setInt(1, hallId);
+                prepStatement2.setInt(2, flatId);
+                prepStatement2.setInt(3, roomId);
+                prepStatement2.executeUpdate();
+                return true;
+            } catch(SQLException ex) {
+                AccommodationSystem.debug(ex.getMessage());
+            } finally {
+                try {
+                    if(prepStatement != null) prepStatement.close();
+                    if(prepStatement2 != null) prepStatement2.close();
+                } catch(Exception x) {}
+            }
+        }
+        
+        return false;
+    }
 }

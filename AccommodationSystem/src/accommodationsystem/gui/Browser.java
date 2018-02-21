@@ -95,6 +95,7 @@ public class Browser extends GUI {
             miDeleteLease,
             miCheckLeaseDuration,
             miViewStudent,
+            miRoomPrice,
             miRoomLocation,
             miHallLocation;
     
@@ -220,6 +221,7 @@ public class Browser extends GUI {
         // Open up Administrator Panel GUI
         try {
             new AdminPanel().getStage().showAndWait();
+            this.buildTable(0);
         } catch(Exception e) { }
     }
     
@@ -548,9 +550,10 @@ public class Browser extends GUI {
             miDeleteLease = new MenuItem("Delete Lease");
             miCheckLeaseDuration = new MenuItem("Check Lease Duration");
             miViewStudent = new MenuItem("View Student");
+            miRoomPrice = new MenuItem("Get Monthly Price");
             miRoomLocation = new MenuItem("Get Room Details");
             miHallLocation = new MenuItem("Get Hall Details");
-            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent, miRoomLocation, miHallLocation);
+            rightClickMenu.getItems().addAll(miViewLease, miUpdateLease, miDeleteLease, miSeparator, miCheckLeaseDuration, miViewStudent, miRoomPrice, miRoomLocation, miHallLocation);
             
             /**
              * Menu Item Listeners
@@ -560,6 +563,7 @@ public class Browser extends GUI {
             miDeleteLease.setOnAction((ActionEvent e) -> btnDeleteLease_Click(e));
             miCheckLeaseDuration.setOnAction((ActionEvent e) -> mi_CheckLeaseDuration(e));
             miViewStudent.setOnAction((ActionEvent e) -> mi_ViewStudent(e));
+            miRoomPrice.setOnAction((ActionEvent e) -> mi_RoomPrice(e));
             miRoomLocation.setOnAction((ActionEvent e) -> mi_RoomLocation(e));
             miHallLocation.setOnAction((ActionEvent e) -> mi_HallLocation(e));
             
@@ -714,6 +718,17 @@ public class Browser extends GUI {
         String m = MessageFormat.format("Student ID: {0}\nStudent Name: {1}\n\n{1} lives in Room {2}, Flat {3}, {4}.", lease.getStudentId(), lease.getStudentName(), lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName());
         Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
         viewStudentInfo.showAndWait();
+    }
+    
+    private void mi_RoomPrice(ActionEvent e) {
+        // Get our selected item
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        // Show Alert (Message)
+        String m = MessageFormat.format("This lease''s monthly price is set to: £{0}",
+                lease.getRoom().getMonthlyPrice());
+        Alert roomPrice = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
+        roomPrice.showAndWait();
     }
     
     private void mi_RoomLocation(ActionEvent e) {
