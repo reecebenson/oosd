@@ -621,28 +621,28 @@ public class AdminPanel extends GUI {
         hallGrid.setPadding(new Insets(20, 150, 10, 10));
             
         // Set fields
-        TextField cbHallName = new TextField();
-        cbHallName.setPromptText("Hall Name");
-        TextField cbHallShortName = new TextField();
-        cbHallShortName.setPromptText("Hall Short Name");
-        TextField cbHallAddress = new TextField();
-        cbHallAddress.setPromptText("Hall Full Address");
-        TextField cbHallPostCode = new TextField();
-        cbHallPostCode.setPromptText("Hall Post Code");
-        TextField cbHallPhone = new TextField();
-        cbHallPhone.setPromptText("Hall Phone Number");
+        TextField hdName = new TextField();
+        hdName.setPromptText("Hall Name");
+        TextField hdShortName = new TextField();
+        hdShortName.setPromptText("Hall Short Name");
+        TextField hdAddress = new TextField();
+        hdAddress.setPromptText("Hall Full Address");
+        TextField hdPostcode = new TextField();
+        hdPostcode.setPromptText("Hall Post Code");
+        TextField hdPhone = new TextField();
+        hdPhone.setPromptText("Hall Phone Number");
 
         // Setup Grid
         hallGrid.add(new Label("Name:"), 0, 0);
-        hallGrid.add(cbHallName, 1, 0);
+        hallGrid.add(hdName, 1, 0);
         hallGrid.add(new Label("Short Name:"), 0, 1);
-        hallGrid.add(cbHallShortName, 1, 1);
+        hallGrid.add(hdShortName, 1, 1);
         hallGrid.add(new Label("Full Address:"), 0, 2);
-        hallGrid.add(cbHallAddress, 1, 2);
+        hallGrid.add(hdAddress, 1, 2);
         hallGrid.add(new Label("Postcode:"), 0, 3);
-        hallGrid.add(cbHallPostCode, 1, 3);
+        hallGrid.add(hdPostcode, 1, 3);
         hallGrid.add(new Label("Phone Number:"), 0, 4);
-        hallGrid.add(cbHallPhone, 1, 4);
+        hallGrid.add(hdPhone, 1, 4);
         hallDialog.getDialogPane().setContent(hallGrid);
         
         // Create Button
@@ -671,8 +671,8 @@ public class AdminPanel extends GUI {
             if(result.isPresent()) {
                 if(result.get()) {
                     // Validate Hall Stuff
-                    if(!(cbHallName.getText().isEmpty() && cbHallShortName.getText().isEmpty() && cbHallAddress.getText().isEmpty() && cbHallPostCode.getText().isEmpty() && cbHallPhone.getText().isEmpty())) {
-                        Database.createHall(new Hall(-1, cbHallName.getText(), cbHallShortName.getText(), cbHallAddress.getText(), cbHallPostCode.getText(), cbHallPhone.getText(), -1));
+                    if(!(hdName.getText().isEmpty() && hdShortName.getText().isEmpty() && hdAddress.getText().isEmpty() && hdPostcode.getText().isEmpty() && hdPhone.getText().isEmpty())) {
+                        Database.createHall(new Hall(-1, hdName.getText(), hdShortName.getText(), hdAddress.getText(), hdPostcode.getText(), hdPhone.getText(), -1));
                         
                         // Clear Table
                         tbl.getItems().clear();
@@ -711,11 +711,11 @@ public class AdminPanel extends GUI {
             hallDialog.getDialogPane().getButtonTypes().addAll(hallOkButton, ButtonType.CANCEL);
             
             // Set Input Values
-            cbHallName.setText(hrSelected.getHallName());
-            cbHallShortName.setText(hrSelected.getHallShortName());
-            cbHallAddress.setText(hrSelected.getHallAddress());
-            cbHallPostCode.setText(hrSelected.getHallPostcode());
-            cbHallPhone.setText(hrSelected.getHallPhone());
+            hdName.setText(hrSelected.getHallName());
+            hdShortName.setText(hrSelected.getHallShortName());
+            hdAddress.setText(hrSelected.getHallAddress());
+            hdPostcode.setText(hrSelected.getHallPostcode());
+            hdPhone.setText(hrSelected.getHallPhone());
 
             // Button True/False Sets
             hallDialog.setResultConverter(dialogButton -> {
@@ -732,8 +732,8 @@ public class AdminPanel extends GUI {
             if(result.isPresent()) {
                 if(result.get()) {
                     // Validate Hall Stuff
-                    if(!(cbHallName.getText().isEmpty() && cbHallShortName.getText().isEmpty() && cbHallAddress.getText().isEmpty() && cbHallPostCode.getText().isEmpty() && cbHallPhone.getText().isEmpty())) {
-                        Database.updateHall(new Hall(hrSelected.getHallId(), cbHallName.getText(), cbHallShortName.getText(), cbHallAddress.getText(), cbHallPostCode.getText(), cbHallPhone.getText(), -1));
+                    if(!(hdName.getText().isEmpty() && hdShortName.getText().isEmpty() && hdAddress.getText().isEmpty() && hdPostcode.getText().isEmpty() && hdPhone.getText().isEmpty())) {
+                        Database.updateHall(new Hall(hrSelected.getHallId(), hdName.getText(), hdShortName.getText(), hdAddress.getText(), hdPostcode.getText(), hdPhone.getText(), -1));
                         
                         // Clear Table
                         tbl.getItems().clear();
@@ -810,8 +810,9 @@ public class AdminPanel extends GUI {
         Button deleteButton = new Button();
         FlowPane tBottomBtnStrip = new FlowPane(Orientation.HORIZONTAL, 5, 5);
         TableView<RoomRow> tbl = new TableView<>();
-        TableColumn roomId = new TableColumn("Room ID");
         TableColumn hallId = new TableColumn("Hall ID");
+        TableColumn flatId = new TableColumn("Flat ID");
+        TableColumn roomId = new TableColumn("Room ID");
         TableColumn occupied = new TableColumn("Occupancy Status");
         TableColumn cleanStatus = new TableColumn("Clean Status");
         TableColumn monthlyPrice = new TableColumn("Monthly Price (£)");
@@ -838,10 +839,11 @@ public class AdminPanel extends GUI {
          */
         ObservableList<RoomRow> rooms = FXCollections.observableArrayList();
         Database.getRoomsAsRow().stream().forEach((r) -> {
-            rooms.add(new RoomRow(r.getRoomId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
+            rooms.add(new RoomRow(r.getRoomId(), r.getFlatId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
         });
-        roomId.setCellValueFactory(new PropertyValueFactory<>("RoomId"));
         hallId.setCellValueFactory(new PropertyValueFactory<>("HallId"));
+        flatId.setCellValueFactory(new PropertyValueFactory<>("FlatId"));
+        roomId.setCellValueFactory(new PropertyValueFactory<>("RoomId"));
         occupied.setCellValueFactory(new PropertyValueFactory<>("Occupied"));
         cleanStatus.setCellValueFactory(new PropertyValueFactory<>("CleanStatus"));
         monthlyPrice.setCellValueFactory(new PropertyValueFactory<>("MonthlyPrice"));
@@ -850,7 +852,7 @@ public class AdminPanel extends GUI {
         /**
          * Compile Elements
          */
-        tbl.getColumns().addAll(roomId, hallId, occupied, cleanStatus, monthlyPrice);
+        tbl.getColumns().addAll(hallId, flatId, roomId, occupied, cleanStatus, monthlyPrice);
         tbl.getColumns().stream().forEach((TableColumn c) -> c.impl_setReorderable(false)); // TEMP -- DISABLES COLUMN REORDERING
         
         /**
@@ -863,13 +865,162 @@ public class AdminPanel extends GUI {
             double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
             tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
         }
-        
         /**
          * Add functionality to buttons
          */
-        createButton.setOnAction((e) -> { });
-        editButton.setOnAction((e) -> { });
-        deleteButton.setOnAction((e) -> { });
+        
+        // Setup Dialog
+        Dialog<Boolean> roomDialog = new Dialog<>();
+        
+        // Create the username and password labels and fields
+        GridPane roomGrid = new GridPane();
+        roomGrid.setHgap(10);
+        roomGrid.setVgap(10);
+        roomGrid.setPadding(new Insets(20, 150, 10, 10));
+            
+        // Set fields
+        TextField rdHallId = new TextField();
+        rdHallId.setPromptText("Hall ID");
+        TextField rdFlatId = new TextField();
+        rdFlatId.setPromptText("Flat ID");
+        TextField rdRoomId = new TextField();
+        rdRoomId.setPromptText("Room ID");
+        TextField rdMonthlyPrice = new TextField();
+        rdMonthlyPrice.setPromptText("Monthly Price (£)");
+
+        // Setup Grid
+        roomGrid.add(new Label("Hall ID:"), 0, 0);
+        roomGrid.add(rdHallId, 1, 0);
+        roomGrid.add(new Label("Flat ID:"), 0, 1);
+        roomGrid.add(rdFlatId, 1, 1);
+        roomGrid.add(new Label("Room ID:"), 0, 2);
+        roomGrid.add(rdRoomId, 1, 2);
+        roomGrid.add(new Label("Monthly Price:"), 0, 3);
+        roomGrid.add(rdMonthlyPrice, 1, 3);
+        roomDialog.getDialogPane().setContent(roomGrid);
+        
+        // Create Button
+        createButton.setOnAction((e) -> {
+            // Create the custom dialog.
+            roomDialog.setTitle("Create Room");
+            roomDialog.setHeaderText("Create Room");
+            
+            // Initialise elements
+            ButtonType roomOkButton = new ButtonType("Create Room", ButtonData.OK_DONE);
+            roomDialog.getDialogPane().getButtonTypes().clear();
+            roomDialog.getDialogPane().getButtonTypes().addAll(roomOkButton, ButtonType.CANCEL);
+
+            // Button True/False Sets
+            roomDialog.setResultConverter(dialogButton -> {
+                if(dialogButton == roomOkButton) {
+                    return true;
+                } else if(dialogButton == ButtonType.CANCEL) {
+                    return false;
+                }
+                return null;
+            });
+            
+            // Handle Result
+            Optional<Boolean> result = roomDialog.showAndWait();
+            if(result.isPresent()) {
+                if(result.get()) {
+                    // Validate Hall Stuff
+                    if(!(rdHallId.getText().isEmpty() && rdFlatId.getText().isEmpty() && rdRoomId.getText().isEmpty() && rdMonthlyPrice.getText().isEmpty())) {
+                        // do stuff here
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Unable to create Room!", ButtonType.OK).showAndWait();
+                    }
+                }
+            }
+        });
+        
+        // Edit Button
+        editButton.setOnAction((e) -> {
+            // Get Selected Item
+            RoomRow rrSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(rrSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a Room to edit!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Create the custom dialog.
+            roomDialog.setTitle("Create Room");
+            roomDialog.setHeaderText("Create Room");
+            
+            // Initialise elements
+            ButtonType roomOkButton = new ButtonType("Update Room", ButtonData.OK_DONE);
+            roomDialog.getDialogPane().getButtonTypes().clear();
+            roomDialog.getDialogPane().getButtonTypes().addAll(roomOkButton, ButtonType.CANCEL);
+            
+            // Set Input Values
+            rdHallId.setText(rrSelected.getHallId().toString());
+            rdFlatId.setText(rrSelected.getFlatId().toString());
+            rdRoomId.setText(rrSelected.getRoomId().toString());
+            rdMonthlyPrice.setText(rrSelected.getMonthlyPrice().toString());
+
+            // Button True/False Sets
+            roomDialog.setResultConverter(dialogButton -> {
+                if(dialogButton == roomOkButton) {
+                    return true;
+                } else if(dialogButton == ButtonType.CANCEL) {
+                    return false;
+                }
+                return null;
+            });
+            
+            // Handle Result
+            Optional<Boolean> result = roomDialog.showAndWait();
+            if(result.isPresent()) {
+                if(result.get()) {
+                    // Validate Room Stuff
+                    if(!(rdHallId.getText().isEmpty() && rdFlatId.getText().isEmpty() && rdRoomId.getText().isEmpty() && rdMonthlyPrice.getText().isEmpty())) {
+                        //Database.updateHall(new Hall(rrSelected.getHallId(), rdHallId.getText(), rdFlatId.getText(), rdRoomId.getText(), rdMonthlyPrice.getText(), cbHallPhone.getText(), -1));
+                        
+                        // clear table
+                        // update table
+                    } else {
+                        new Alert(Alert.AlertType.ERROR, "Unable to create Room!", ButtonType.OK).showAndWait();
+                    }
+                }
+            }
+        });
+        
+        // Delete Button
+        deleteButton.setOnAction((e) -> {
+            // Get Selected Item
+            RoomRow rrSelected = tbl.getSelectionModel().getSelectedItem();
+            
+            // Check if we have something selected
+            if(rrSelected == null) {
+                new Alert(Alert.AlertType.ERROR, "Please select a Room to delete!", ButtonType.OK).showAndWait();
+                return;
+            }
+            
+            // Confirm Deletion
+            Alert confirmDeletion = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete the selected room?", ButtonType.YES, ButtonType.NO);
+            Optional<ButtonType> r = confirmDeletion.showAndWait();
+            if(r.get() == ButtonType.YES) {
+                System.out.println("deletion confirmed");
+                // Deletion Confirmed
+                /*
+                if(Database.deleteHall(rrSelected.getHallId())) {
+                    // Clear Table
+                    tbl.getItems().clear();
+                    
+                    // Rebuild Table
+                    ObservableList<HallRow> newHalls = FXCollections.observableArrayList();
+                    Database.getHallsAsRow().stream().forEach((h) -> {
+                        newHalls.add(new HallRow(h.getHallId(), h.getHallName(), h.getHallShortName(), h.getHallAddress(), h.getHallPostcode(), h.getHallPhone(), h.getHallRoomCount()));
+                    });
+                    tbl.setItems(newHalls);
+                } else {
+                    new Alert(Alert.AlertType.ERROR, "Unable to delete hall!", ButtonType.OK).showAndWait();
+                }
+                */
+            }
+        });
         
         /**
          * Compile Elements

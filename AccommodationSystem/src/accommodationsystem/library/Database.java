@@ -415,7 +415,7 @@ public class Database {
         {
             // Get Rooms
             Database.getRooms().stream().forEach((h) -> {
-                roomList.add(new RoomRow(h.getRoomId(), h.getHallId(), h.getOccupied(), h.getCleanStatus(), h.getMonthlyPrice()));
+                roomList.add(new RoomRow(h.getRoomId(), h.getFlatId(), h.getHallId(), h.getOccupied(), h.getCleanStatus(), h.getMonthlyPrice()));
             });
         }
         

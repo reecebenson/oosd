@@ -13,13 +13,15 @@ import javafx.beans.property.SimpleIntegerProperty;
  */
 public class RoomRow {
     private final IntegerProperty roomId,
+            flatId,
             hallId,
             occupied,
             cleanStatus,
             monthlyPrice;
 
-    public RoomRow(Integer roomId, Integer hallId, Integer occupied, Integer cleanStatus, Integer monthlyPrice) {
+    public RoomRow(Integer roomId, Integer flatId, Integer hallId, Integer occupied, Integer cleanStatus, Integer monthlyPrice) {
         this.roomId = new SimpleIntegerProperty(roomId);
+        this.flatId = new SimpleIntegerProperty(flatId);
         this.hallId = new SimpleIntegerProperty(hallId);
         this.occupied = new SimpleIntegerProperty(occupied);
         this.cleanStatus = new SimpleIntegerProperty(cleanStatus);
@@ -28,6 +30,10 @@ public class RoomRow {
 
     public Integer getRoomId() {
         return roomId.intValue();
+    }
+
+    public Integer getFlatId() {
+        return flatId.intValue();
     }
 
     public Integer getHallId() {
