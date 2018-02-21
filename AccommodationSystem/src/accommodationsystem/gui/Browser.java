@@ -102,7 +102,8 @@ public class Browser extends GUI {
     
     // GUI Size (default: 800)
     private int _size_xy = 800;
-    private boolean justSelectedNewItem = false;
+    private boolean justSelectedNewItem = false,
+                    justChangedHallFilter = false;
     
     /**
      * @name    buildHeader
@@ -187,7 +188,6 @@ public class Browser extends GUI {
         // Logged In As Label
         loggedInAs.getChildren().addAll(lblLoggedInAs, lblLoggedInUsername, lblViewPermissions, lblSpacer);
         // Button Strip
-        // ComboBox
         btnStrip.getChildren().add(cbHalls);
         if(User.hasPermission(Permissions.ADMIN_PANEL)) btnStrip.getChildren().add(btnAdminPanel);
         btnStrip.getChildren().add(btnSearch);
@@ -202,12 +202,15 @@ public class Browser extends GUI {
     
     /**
      * @name    btnViewPerms_Click
-     * @desc    Handles the Click event for the View Permissions button
+     * @desc    Handles the Click event for the View Permissions button/label
      * @param   event 
      */
     private void btnViewPerms_Click(ActionEvent event) {
-        // Open up View Permissions GUI
+        /**
+         * Open up View Permissions GUI
+         */
         try {
+            // Show GUI
             new ViewPermissions().getStage().showAndWait();
         } catch(Exception e) { }
     }
@@ -218,10 +221,17 @@ public class Browser extends GUI {
      * @param   event 
      */
     private void btnAdminPanel_Click(ActionEvent event) {
-        // Open up Administrator Panel GUI
+        /**
+         * Open up Administrator Panel GUI
+         */
         try {
+            // Show GUI
             new AdminPanel().getStage().showAndWait();
+            
+            // Rebuild our table
             this.buildTable(0);
+            
+            // Update the ComboBox for filtering by Hall Name
             this.cbHalls.getItems().clear();
             this.cbHalls.setValue("0: All"); 
             this.cbHalls.setItems(Database.getHallNames(true));
@@ -244,21 +254,34 @@ public class Browser extends GUI {
             return;
         }
         
-        List<String> choices = new ArrayList<>();
-        choices.add("Student Name");
-        if(User.getAllocatedHall() == 0) choices.add("Hall Name");
-        choices.add("Flat Number");
-        choices.add("Room Number");
-        choices.add("Cleaning Status");
-        choices.add("Occupancy");
+        /**
+         * Initialise our options
+         */
+        List<String> options = new ArrayList<>();
+        options.add("Student Name");
+        if(User.getAllocatedHall() == 0) options.add("Hall Name");
+        options.add("Flat Number");
+        options.add("Room Number");
+        options.add("Cleaning Status");
+        options.add("Occupancy");
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>("Student Name", choices);
+        /**
+         * Initialise our Dialog
+         */
+        ChoiceDialog<String> dialog = new ChoiceDialog<>("Student Name", options);
         dialog.setTitle("Search");
         dialog.setHeaderText("Please select a searching option");
         dialog.setContentText("Search by:");
+        
+        /**
+         * Show Dialog and get our result
+         */
         Optional<String> res = dialog.showAndWait();
         if(res.isPresent()) {
+            // Cache our leases
             List<LeaseData> leases = Database.getLeases(0);
+            
+            // Filter through our result
             switch(res.get()) {
                 case "Student Name": {
                     TextInputDialog tiDialog = new TextInputDialog();
@@ -412,8 +435,8 @@ public class Browser extends GUI {
      * @param   event 
      */
     private void btnLogout_Click(ActionEvent event) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to logout?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait().filter(response -> response == ButtonType.YES).ifPresent(response -> {
+        new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to logout?", ButtonType.YES, ButtonType.NO)
+        .showAndWait().filter(response -> response == ButtonType.YES).ifPresent(response -> {
             // Open up Login GUI
             try {
                 User.logout();
@@ -431,7 +454,6 @@ public class Browser extends GUI {
      * @param   oldValue
      * @param   newValue 
      */
-    private boolean justChangedHallFilter = false;
     private void cbHalls_Changed(ComboBox cb, Object options, Object oldValue, Object newValue) {
         /**
          * Returners
@@ -487,14 +509,20 @@ public class Browser extends GUI {
         String oldVal = (String)oldValue;
         String newVal = (String)newValue;
         
-        // Debug
+        /**
+         * Debug
+         */
         AccommodationSystem.debug("Old Value: " + oldVal + " | New Value: " + newVal + " ---> " + comboChangeCleanStatus.getSelectionModel().getSelectedIndex());
         
-        // Check if we're trying to view a lease that does not exist (should not occur)
+        /**
+         * Check if we're trying to view a lease that does not exist (should not occur)
+         */
         if(tbl.getSelectionModel().isEmpty())
             return;
         
-        // Get LeaseData
+        /**
+         * Get LeaseData
+         */
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
         /**
@@ -509,12 +537,14 @@ public class Browser extends GUI {
                 new Alert(Alert.AlertType.ERROR, "Cannot set lease status to Offline when a lease is present.", ButtonType.OK).showAndWait();
                 Platform.runLater(() -> comboChangeCleanStatus.setValue(lease.getCleanStatusName()));
             } else {
-                /**
-                * Update Lease Data
-                */
+                // Update Lease Data
                if(!lease.getCleanStatusName().equals(newVal)) {
                    lease.setCleanStatus(new SimpleIntegerProperty((int)CleaningStatus.getId((String)newVal)));
+                   
+                   // Update Room
                    Database.updateRoom(lease);
+                   
+                   // Rebuild Table
                    this.buildTable(_currentHallView);
                }
             }
@@ -667,122 +697,47 @@ public class Browser extends GUI {
         }
     }
     
+    /**
+     * @name    tbl_Click
+     * @desc    Create the Table Handler for when a user clicks
+     * 
+     * @param   event
+     */
     private void tbl_Click(MouseEvent event) {
-        // Validate selected row
+        /**
+         * Validate selected row
+         */
         if(tbl.getSelectionModel().isEmpty())
             return;
         
-        // Check if we've double clicked
-        if(event.getClickCount() >= 2) {
+        /**
+         * Check if we've double clicked
+         * Check if we have permission to View a Lease
+         */
+        if(event.getClickCount() >= 2 && User.hasPermission(Permissions.VIEW_LEASES)) {
             btnViewLease_Click(null);
         }
         
-        // Check if we've right clicked
+        /**
+         * Check if we've right clicked
+         */
         if(event.getButton() == MouseButton.SECONDARY) {
             rightClickMenu.show(tbl, event.getScreenX(), event.getScreenY());
         }
     }
     
-    private void mi_CheckLeaseDuration(ActionEvent e) {
-        // Get our selected item
-        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Check Lease Status
-        if(lease.getLeaseId() == null) {
-            new Alert(Alert.AlertType.ERROR, "Cannot check lease duration for a lease that does not exist.", ButtonType.OK).showAndWait();
-            return;
-        }
-        
-        // Get Lease Information
-        // DateFormat converts the string parsed to it in dd-MM-yyyy format
-        DateFormat convFormat = new SimpleDateFormat("dd-MM-yyyy");
-        DateFormat showFormat = new SimpleDateFormat("EEEEE, dd 'of' MMMMM, Y");
-        
-        // Parse our lease's start/end dates to a Date Object
-        Date msStartDate, msEndDate;
-        try {
-            msStartDate = convFormat.parse(lease.getStartDate());
-            msEndDate = convFormat.parse(lease.getEndDate());
-        } catch(ParseException ex) {
-            // Something went wrong
-            new Alert(Alert.AlertType.ERROR, "There was an issue trying to retrieve the lease duration.", ButtonType.OK).showAndWait();
-            System.out.println("Parse Exception error: " + ex.getMessage());
-            return;
-        }
-        
-        // Conversions
-        int tsStart = (int)Math.floor(msStartDate.getTime() / 1000);
-        int tsEnd = (int)Math.floor(msEndDate.getTime() / 1000);
-        int tsNow = (int)Math.floor(System.currentTimeMillis() / 1000);
-        int secsLeft = (tsEnd - tsNow);
-        
-        // Debug
-        AccommodationSystem.debug("Timestamp Start: " + tsStart);
-        AccommodationSystem.debug("Timestamp End:" + tsEnd);
-        AccommodationSystem.debug("Timestamp Now: " + tsNow);
-        AccommodationSystem.debug("Seconds Left: " + secsLeft);
-        
-        // Create our LeaseDuration Object
-        LeaseDuration ld = new LeaseDuration(secsLeft);
-        
-        // Show Alert (Message)
-        String m = MessageFormat.format("Start Date: {0}\nEnd Date: {1}\n\nThis lease has {2} weeks, {3} days, {4} hours, {5} minutes and {6} seconds remaining.",
-                showFormat.format(msStartDate), showFormat.format(msEndDate), ld.getWeeks(), ld.getDays(), ld.getHours(), ld.getMinutes(), ld.getSeconds());
-        Alert checkLeaseDur = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
-        checkLeaseDur.showAndWait();
-    }
-    
-    private void mi_ViewStudent(ActionEvent e) {
-        // Get our selected item
-        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Check Lease Status
-        if(lease.getLeaseId() == null) {
-            new Alert(Alert.AlertType.ERROR, "Cannot view student for a lease that does not exist.", ButtonType.OK).showAndWait();
-            return;
-        }
-        
-        // Show Alert (Message)
-        String m = MessageFormat.format("Student ID: {0}\nStudent Name: {1}\n\n{1} lives in Room {2}, Flat {3}, {4}.", lease.getStudentId(), lease.getStudentName(), lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName());
-        Alert viewStudentInfo = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
-        viewStudentInfo.showAndWait();
-    }
-    
-    private void mi_RoomPrice(ActionEvent e) {
-        // Get our selected item
-        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Show Alert (Message)
-        String m = MessageFormat.format("This lease''s monthly price is set to: £{0}",
-                lease.getRoom().getMonthlyPrice());
-        Alert roomPrice = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
-        roomPrice.showAndWait();
-    }
-    
-    private void mi_RoomLocation(ActionEvent e) {
-        // Get our selected item
-        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Show Alert (Message)
-        String m = MessageFormat.format("This lease''s address is set to:\n\nRoom {0}, Flat {1}, {2}\n{3}\n{4}",
-                lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName(), lease.getHall().getAddress(), lease.getHall().getPostcode());
-        Alert roomDetails = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
-        roomDetails.showAndWait();
-    }
-    
-    private void mi_HallLocation(ActionEvent e) {
-        // Get our selected item
-        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Show Alert (Message)
-        String m = MessageFormat.format("This lease exists within {0}.\n\nName: {0}\nNumber: {1}\nAddress: {2}\nPostcode: {3}\nTelephone: {4}",
-                lease.getHallName(), lease.getHall().getId(), lease.getHall().getAddress(), lease.getHall().getPostcode(), lease.getHall().getPhone());
-        Alert hallDetails = new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK);
-        hallDetails.showAndWait();
-    }
-    
+    /**
+     * @name    tbl_Select
+     * @desc    Create the Table Handler for when a user selects a row
+     * 
+     * @param   obs
+     * @param   oldSelection
+     * @param   newSelection
+     */
     private void tbl_Select(Object obs, Object oldSelection, Object newSelection) {
-        // Enable or Disable our Footer Buttons
+        /**
+         * Enable or Disable our Footer Buttons
+         */
         footerBox.getChildren().stream().forEach((Node o) -> {
             if(o instanceof HBox) {
                 HBox pane = (HBox)o;
@@ -799,18 +754,22 @@ public class Browser extends GUI {
             }
         });
         
-        // Enable or Disable our Right Click Menu Items
+        /**
+         * Enable or Disable our Right Click Menu Items
+         */
         rightClickMenu.getItems().stream().forEach((MenuItem i) -> {
             i.setDisable((newSelection == null));
         });
         
-        // Get our selected item
+        /**
+         * Get our selected item and return if it's null
+         */
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
-        
-        // Check if lease is valid
         if(lease == null) return;
         
-        // Enable or Disable our Right Click Menu Items
+        /**
+         * Enable or Disable our Right Click Menu Items
+         */
         miViewLease.setDisable(false);
         miUpdateLease.setDisable((lease.getLeaseId() == null && lease.getCleanStatusName().equals("Offline")));
         miDeleteLease.setDisable((lease.getLeaseId() == null));
@@ -818,15 +777,23 @@ public class Browser extends GUI {
         miViewStudent.setDisable((lease.getLeaseId() == null));
         miHallLocation.setDisable(false);
         
-        // Permission Check for Right Click Menu Items
+        /**
+         * Permission Check for Right Click Menu Items
+         */
         if(!User.hasPermission(Permissions.EDIT_LEASE)) {
             miUpdateLease.setDisable(true);
             miDeleteLease.setDisable(true);
         }
         
-        // Debug
+        /**
+         * Debug
+         */
         AccommodationSystem.debug("Selected Lease: " + lease.getLeaseId());
         
+        /**
+         * Make changes to the values, text and disable states of
+         * our GUI elements.
+         */
         // Check if our lease exists
         btnCreateLease.setText((lease.getLeaseId() == null ? "Create Lease" : "Update Lease"));
         miUpdateLease.setText((lease.getLeaseId() == null ? "Create Lease" : "Update Lease"));
@@ -841,6 +808,153 @@ public class Browser extends GUI {
         // Update ComboBox
         comboChangeCleanStatus.setValue(lease.getCleanStatusName());
         comboChangeCleanStatus.setDisable(lease.getCleanStatusName().equals("Offline") && !User.hasPermission(Permissions.MANAGE_OFFLINE));
+    }
+    
+    /**
+     * @name    mi_CheckLeaseDuration
+     * @desc    [Menu Item] Handles when the menu item is clicked
+     * 
+     * @param   e
+     */
+    private void mi_CheckLeaseDuration(ActionEvent e) {
+        /**
+         * Get our selected item
+         */
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Check Lease Status
+         */
+        if(lease.getLeaseId() == null) {
+            new Alert(Alert.AlertType.ERROR, "Cannot check lease duration for a lease that does not exist.", ButtonType.OK).showAndWait();
+            return;
+        }
+        
+        /**
+         * Get Lease Information
+         */
+        // DateFormat converts the string parsed to it in dd-MM-yyyy format
+        DateFormat convFormat = new SimpleDateFormat("dd-MM-yyyy");
+        DateFormat showFormat = new SimpleDateFormat("EEEEE, dd 'of' MMMMM, Y");
+        
+        // Parse our lease's start/end dates to a Date Object
+        Date msStartDate, msEndDate;
+        try {
+            msStartDate = convFormat.parse(lease.getStartDate());
+            msEndDate = convFormat.parse(lease.getEndDate());
+        } catch(ParseException ex) {
+            // Something went wrong
+            new Alert(Alert.AlertType.ERROR, "There was an issue trying to retrieve the lease duration.", ButtonType.OK).showAndWait();
+            System.out.println("Parse Exception error: " + ex.getMessage());
+            return;
+        }
+        
+        /**
+         * Conversions
+         */
+        int tsStart = (int)Math.floor(msStartDate.getTime() / 1000);
+        int tsEnd = (int)Math.floor(msEndDate.getTime() / 1000);
+        int tsNow = (int)Math.floor(System.currentTimeMillis() / 1000);
+        int secsLeft = (tsEnd - tsNow);
+        
+        /**
+         * Create our LeaseDuration Object which will convert the seconds into a readable format
+         */
+        LeaseDuration ld = new LeaseDuration(secsLeft);
+        
+        /**
+         * Show Alert (Message)
+         */
+        String m = MessageFormat.format("Start Date: {0}\nEnd Date: {1}\n\nThis lease has {2} weeks, {3} days, {4} hours, {5} minutes and {6} seconds remaining.",
+                showFormat.format(msStartDate), showFormat.format(msEndDate), ld.getWeeks(), ld.getDays(), ld.getHours(), ld.getMinutes(), ld.getSeconds());
+        new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK).showAndWait();
+    }
+    
+    /**
+     * @name    mi_ViewStudent
+     * @desc    [Menu Item] Handles when the menu item is clicked
+     * 
+     * @param   e
+     */
+    private void mi_ViewStudent(ActionEvent e) {
+        /**
+         * Get our selected item
+         */
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Check Lease Status
+         */
+        if(lease.getLeaseId() == null) {
+            new Alert(Alert.AlertType.ERROR, "Cannot view student for a lease that does not exist.", ButtonType.OK).showAndWait();
+            return;
+        }
+        
+        /**
+         * Show Alert (Message)
+         */
+        String m = MessageFormat.format("Student ID: {0}\nStudent Name: {1}\n\n{1} lives in Room {2}, Flat {3}, {4}.", lease.getStudentId(), lease.getStudentName(), lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName());
+        new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK).showAndWait();
+    }
+    
+    /**
+     * @name    mi_RoomPrice
+     * @desc    [Menu Item] Handles when the menu item is clicked
+     * 
+     * @param   e
+     */
+    private void mi_RoomPrice(ActionEvent e) {
+        /**
+         * Get our selected item
+         */
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Show Alert (Message)
+         */
+        String m = MessageFormat.format("This lease''s monthly price is set to: £{0}",
+                lease.getRoom().getMonthlyPrice());
+        new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK).showAndWait();
+    }
+    
+    /**
+     * @name    mi_RoomLocation
+     * @desc    [Menu Item] Handles when the menu item is clicked
+     * 
+     * @param   e
+     */
+    private void mi_RoomLocation(ActionEvent e) {
+        /**
+         * Get our selected item
+         */
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Show Alert (Message)
+         */
+        String m = MessageFormat.format("This lease''s address is set to:\n\nRoom {0}, Flat {1}, {2}\n{3}\n{4}",
+                lease.getRoomNumber(), lease.getFlatNumber(), lease.getHallName(), lease.getHall().getAddress(), lease.getHall().getPostcode());
+        new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK).showAndWait();
+    }
+    
+    /**
+     * @name    mi_HallLocation
+     * @desc    [Menu Item] Handles when the menu item is clicked
+     * 
+     * @param   e
+     */
+    private void mi_HallLocation(ActionEvent e) {
+        /**
+         * Get our selected item
+         */
+        LeaseData lease = tbl.getSelectionModel().getSelectedItem();
+        
+        /**
+         * Show Alert (Message)
+         */
+        String m = MessageFormat.format("This lease exists within {0}.\n\nName: {0}\nNumber: {1}\nAddress: {2}\nPostcode: {3}\nTelephone: {4}",
+                lease.getHallName(), lease.getHall().getId(), lease.getHall().getAddress(), lease.getHall().getPostcode(), lease.getHall().getPhone());
+        new Alert(Alert.AlertType.INFORMATION, m, ButtonType.OK).showAndWait();
     }
     
     /**
@@ -937,48 +1051,83 @@ public class Browser extends GUI {
         footerBox.getChildren().addAll(leftBox, footerSpacer, rightBox);
     }
     
+    /**
+     * @name    btnCreateLease_Click
+     * @desc    Handles the Click event for the create lease button
+     * @param   event 
+     */
     private void btnCreateLease_Click(ActionEvent event) {
-        // Check if we're trying to view a lease that does not exist (should not occur)
+        /**
+         * Check if we're trying to select a lease that does not exist (should not occur)
+         */
         if(tbl.getSelectionModel().isEmpty())
             return;
         
-        // Get LeaseData
+        /**
+         * Get LeaseData
+         */
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
-        // Open our View Lease GUI
+        /**
+         * Open our View Lease GUI
+         */
         try {
-            // Verify Lease Cleaning Status
+            /**
+             * Verify Lease Cleaning Status as leases are not able to be made
+             * when the cleaning status is set to Offline.
+             */
             if(lease.getCleanStatusName().equals("Offline")) {
                 new Alert(Alert.AlertType.ERROR, "Cannot create a lease when the room status is Offline.", ButtonType.OK).show();
                 return;
             }
             
+            /**
+             * Get our leases ID and show debug (if available)
+             */
             Integer leaseId = lease.getLeaseId();
-            AccommodationSystem.debug("Creating Lease: " + (leaseId == null ? 0 : leaseId));
+            AccommodationSystem.debug("Creating/Updating Lease: " + (leaseId == null ? 0 : leaseId));
             
-            // Modal
-            Stage viewLease = new ViewLease(this, lease, (btnCreateLease.textProperty().get().equals("Create Lease") ? "create" : "update")).getStage();
-            viewLease.initOwner(this.getScene().getWindow());
-            viewLease.initModality(Modality.APPLICATION_MODAL);
-            viewLease.showAndWait();
+            /**
+             * Show our Create/Update Lease GUI as a Modal
+             */
+            Stage updLease = new ViewLease(this, lease, (btnCreateLease.textProperty().get().equals("Create Lease") ? "create" : "update")).getStage();
+            updLease.initOwner(this.getScene().getWindow());
+            updLease.initModality(Modality.APPLICATION_MODAL);
+            updLease.showAndWait();
             
         } catch(Exception e) { }
     }
     
+    /**
+     * @name    btnViewLease_Click
+     * @desc    Handles the Click event for the view lease button
+     * @param   event 
+     */
     private void btnViewLease_Click(ActionEvent event) {
-        // Check if we're trying to view a lease that does not exist (should not occur)
+        /**
+         * Check if we're trying to view a lease that does not exist (should not occur)
+         */
         if(tbl.getSelectionModel().isEmpty())
             return;
         
-        // Get LeaseData
+        /**
+         * Get LeaseData
+         */
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
-        // Open our View Lease GUI
+        /**
+         * Open our View Lease GUI
+         */
         try {
+            /**
+             * Get our leases ID and show debug (if available)
+             */
             Integer leaseId = lease.getLeaseId();
             AccommodationSystem.debug("Viewing Lease: " + (leaseId == null ? 0 : leaseId));
             
-            // Modal
+            /**
+             * Show our View Lease GUI as a Modal
+             */
             Stage viewLease = new ViewLease(this, lease, "view").getStage();
             viewLease.initOwner(this.getScene().getWindow());
             viewLease.initModality(Modality.APPLICATION_MODAL);
@@ -987,21 +1136,34 @@ public class Browser extends GUI {
         } catch(Exception e) { }
     }
     
+    /**
+     * @name    btnDeleteLease_Click
+     * @desc    Handles the Click event for the delete lease button
+     * @param   event 
+     */
     private void btnDeleteLease_Click(ActionEvent event) {
-        // Check if we're trying to view a lease that does not exist (should not occur)
+        /**
+         * Check if we're trying to select a lease that does not exist (should not occur)
+         */
         if(tbl.getSelectionModel().isEmpty())
             return;
         
-        // Get LeaseData
+        /**
+         * Get LeaseData
+         */
         LeaseData lease = tbl.getSelectionModel().getSelectedItem();
         
-        // Check if our lease exists
+        /**
+         * Check if our lease exists
+         */
         if(lease.getLeaseId() == null) {
             new Alert(Alert.AlertType.ERROR, "Unable to delete a lease that does not exist.", ButtonType.OK).show();
             return;
         }
             
-        // Open our View Lease GUI
+        /**
+         * Display our Yes/No Confirmation Message Dialog
+         */
         try {
             Alert confirm = new Alert(Alert.AlertType.WARNING, "Are you sure you would like to delete Lease " + lease.getLeaseId(), ButtonType.NO, ButtonType.YES);
             Optional<ButtonType> ok = confirm.showAndWait();

@@ -26,6 +26,12 @@ public class Permissions {
     public static final String EDIT_CLEAN = "EDIT_CLEAN";
     public static final String ADMIN_PANEL = "ADMIN_PANEL";
     
+    /**
+     * @name    getPermissions
+     * @desc    Construct a String List from the declared variables within this class
+     * 
+     * @return  List<String>
+     */
     public static List<String> getPermissions() {
         List<String> perms = new ArrayList<>();
         for(Field p: Permissions.class.getDeclaredFields()) {

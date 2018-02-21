@@ -159,17 +159,30 @@ public class AdminPanel extends GUI {
         AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
         
         /**
+         * Having to use a bit of a silly way to store the Integer as lambda
+         * functions have to refer to a 'final' when using outer scope
+         * variables.
+         */
+        // Variables
+        final int totalMonthlyIncome;
+        int monthlyIncomeTotal = 0;
+        
+        /**
+         * Work out monthly income
+         * This is done by evaluating each Room which has an occupied
+         * state of 1, it will then increase the variable
+         * 'monthlyIncomeTotal' by the values returned by the map
+         */
+        monthlyIncomeTotal = Database.getRooms().stream().map((r) -> (r.getOccupied() == 1 ? r.getMonthlyPrice() : 0)).reduce(monthlyIncomeTotal, Integer::sum);
+        totalMonthlyIncome = monthlyIncomeTotal;
+        
+        /**
          * Add Button Functionality
          */
         studentCount.setOnAction((e) -> new Alert(Alert.AlertType.INFORMATION, "There are " + Database.getStudentsAsRow().size() + " students.", ButtonType.OK).showAndWait());
         roomCount.setOnAction((e) -> new Alert(Alert.AlertType.INFORMATION, "There are a total of " + Database.getRooms().size() + " rooms.", ButtonType.OK).showAndWait());
         oRoomCount.setOnAction((e) -> new Alert(Alert.AlertType.INFORMATION, "There are a total of " + Database.getRooms().stream().filter((Room r) -> r.getOccupied() == 1).collect(Collectors.toList()).size() + " occupied rooms.", ButtonType.OK).showAndWait());
         uRoomCount.setOnAction((e) -> new Alert(Alert.AlertType.INFORMATION, "There are a total of " + Database.getRooms().stream().filter((Room r) -> r.getOccupied() == 0).collect(Collectors.toList()).size() + " unoccupied rooms.", ButtonType.OK).showAndWait());
-        
-        // Work out monthly income
-        int monthlyIncomeTotal = 0;
-        monthlyIncomeTotal = Database.getRooms().stream().map((r) -> (r.getOccupied() == 1 ? r.getMonthlyPrice() : 0)).reduce(monthlyIncomeTotal, Integer::sum);
-        final int totalMonthlyIncome = monthlyIncomeTotal;
         monthlyIncome.setOnAction((e) -> new Alert(Alert.AlertType.INFORMATION, "The monthly income from occupied rooms is £" + totalMonthlyIncome + ".", ButtonType.OK).showAndWait());
         
         /**
@@ -226,6 +239,8 @@ public class AdminPanel extends GUI {
         tBottomBtnStrip.setAlignment(Pos.CENTER);
         AnchorPane.setRightAnchor(tBottomBtnStrip, 0d);
         AnchorPane.setBottomAnchor(tBottomBtnStrip, 0d);
+        // Update Permissions Column Width
+        userPerms.setPrefWidth(250);
         
         /**
          * Set Table Properties
@@ -257,9 +272,6 @@ public class AdminPanel extends GUI {
             double textWidth = fontMetrics.computeStringWidth(tbl.getColumns().get(i).getText());
             tbl.getColumns().get(i).setPrefWidth(textWidth + 40);
         }
-        
-        // Update Permissions Column Width
-        userPerms.setPrefWidth(250);
         
         /**
          * Add functionality to buttons
@@ -305,7 +317,7 @@ public class AdminPanel extends GUI {
         
         // Create Button
         createButton.setOnAction((e) -> {
-            // Create the custom dialog.
+            // Create the custom dialog
             userDialog.setTitle("Create User");
             userDialog.setHeaderText("Create User");
             
@@ -388,7 +400,7 @@ public class AdminPanel extends GUI {
                 return;
             }
             
-            // Create the custom dialog.
+            // Create the custom dialog
             userDialog.setTitle("Edit User");
             userDialog.setHeaderText("Edit User");
             
@@ -621,7 +633,7 @@ public class AdminPanel extends GUI {
         
         // Create Button
         createButton.setOnAction((e) -> {
-            // Create the custom dialog.
+            // Create the custom dialog
             hallDialog.setTitle("Create Hall");
             hallDialog.setHeaderText("Create Hall");
             
@@ -675,7 +687,7 @@ public class AdminPanel extends GUI {
                 return;
             }
             
-            // Create the custom dialog.
+            // Create the custom dialog
             hallDialog.setTitle("Create Hall");
             hallDialog.setHeaderText("Create Hall");
             
@@ -881,7 +893,7 @@ public class AdminPanel extends GUI {
         
         // Create Button
         createButton.setOnAction((e) -> {
-            // Create the custom dialog.
+            // Create the custom dialog
             roomDialog.setTitle("Create Room");
             roomDialog.setHeaderText("Create Room");
             
@@ -944,7 +956,7 @@ public class AdminPanel extends GUI {
                 return;
             }
             
-            // Create the custom dialog.
+            // Create the custom dialog
             roomDialog.setTitle("Create Room");
             roomDialog.setHeaderText("Create Room");
             
@@ -1268,6 +1280,16 @@ public class AdminPanel extends GUI {
         super.finalise(true);
     }
     
+    /**
+     * @name    tfValidateNumber_Changed
+     * @desc    This is used by multiple text fields which are parsed through as the
+     *          `tf` parameter. It ensures that the inputed value is an integer.
+     * 
+     * @param   tf
+     * @param   options
+     * @param   oldValue
+     * @param   newValue 
+     */
     private void tfValidateNumber_Changed(TextField tf, Object options, Object oldValue, Object newValue) {
         /**
          * Check if values are null to avoid errors

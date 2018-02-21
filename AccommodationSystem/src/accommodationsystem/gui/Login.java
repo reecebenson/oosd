@@ -190,27 +190,15 @@ public class Login extends GUI {
                         } catch(Exception e) { }
                     });
                 }else{
-                    // Setup Alert
-                    alert = new Alert(
-                            AlertType.ERROR,
-                            "You do not have permission to Login!"
-                    );
-
                     // Show Alert
-                    alert.show();
+                    new Alert(AlertType.ERROR, "You do not have permission to Login!", ButtonType.OK).show();
 
                     // Reset Password Field
                     tfPassword.setText("");
                 }
             } else {
-                // Setup Alert
-                alert = new Alert(
-                        AlertType.ERROR,
-                        "You have entered an incorrect username and/or password."
-                );
-
                 // Show Alert
-                alert.show();
+                new Alert(AlertType.ERROR, "You have entered an incorrect username and/or password.", ButtonType.OK).show();
 
                 // Reset Password Field
                 tfPassword.setText("");

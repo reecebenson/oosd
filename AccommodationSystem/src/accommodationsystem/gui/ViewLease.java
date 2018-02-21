@@ -14,13 +14,11 @@ import accommodationsystem.library.LeaseData;
 import accommodationsystem.library.Permissions;
 import accommodationsystem.library.Student;
 import accommodationsystem.library.User;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -54,18 +52,18 @@ public class ViewLease extends GUI {
     // Elements
     Button btnUpdate;
     TextField leaseId,
-            startDate,
-            endDate;
+              startDate,
+              endDate;
     ComboBox hallName,
-            flatNumber,
-            roomNumber,
-            studentName,
-            occupancy,
-            cleanStatus;
+             flatNumber,
+             roomNumber,
+             studentName,
+             occupancy,
+             cleanStatus;
     SimpleIntegerProperty prevHallId,
-            prevFlatNumber,
-            prevRoomNumber;
-    // Checks
+                          prevFlatNumber,
+                          prevRoomNumber;
+    // Flags
     boolean hasChangedRoom = false;
     
     /**
@@ -106,14 +104,14 @@ public class ViewLease extends GUI {
          * Declare Elements
          */
         Label lblLeaseId,
-                lblHallName,
-                lblFlatNumber,
-                lblRoomNumber,
-                lblStudentName,
-                lblStartDate,
-                lblEndDate,
-                lblOccupancy,
-                lblCleanStatus;
+              lblHallName,
+              lblFlatNumber,
+              lblRoomNumber,
+              lblStudentName,
+              lblStartDate,
+              lblEndDate,
+              lblOccupancy,
+              lblCleanStatus;
         
         /**
          * Initialise Elements
@@ -142,7 +140,6 @@ public class ViewLease extends GUI {
         startDate = new TextField();
         endDate = new TextField();
         occupancy = new ComboBox(Occupancy.getOccupancies());
-        
         cleanStatus = new ComboBox(CleaningStatus.getStatuses());
         
         /**
@@ -194,7 +191,7 @@ public class ViewLease extends GUI {
         studentName.setPrefWidth(225.0);
         studentName.setPadding(new Insets(11, 5, 11, 5));
         studentName.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> studentName_Changed(options, oldValue, newValue));
-        // Work Out Current Year
+        // Work Out Current Year [!]
         Calendar cal = Calendar.getInstance();
         Date today = cal.getTime();
         cal.add(Calendar.YEAR, 1);
@@ -206,7 +203,7 @@ public class ViewLease extends GUI {
                 );
         // startDate TextField
         startDate.setStyle("-fx-text-fill: white");
-        startDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(new Date())); // Displays Current Date as 01-01-1970 for example
+        startDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(new Date()));   // Displays Current Date as 01-01-1970 for example
         startDate.setDisable(true);
         startDate.setPrefWidth(225.0);
         startDate.setPadding(new Insets(11, 5, 11, 5));
@@ -374,23 +371,33 @@ public class ViewLease extends GUI {
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
         
-        // Disable Update Button
+        /**
+         * Disable Update Button
+         */
         btnUpdate.setDisable(true);
         flatNumber.setDisable(false);
         roomNumber.setDisable(true);
         
-        // Clear items from our other ComboBoxes
+        /**
+         * Clear items from our other ComboBoxes
+         */
         flatNumber.getItems().clear();
         
-        // Set our combo box values to null
+        /**
+         * Set our combo box values to null
+         */
         flatNumber.setValue(null);
         roomNumber.setValue(null);
         
-        // Populate ComboBoxes
+        /**
+         * Populate ComboBoxes
+         */
         Hall tempHall = Database.getHall(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()));
         flatNumber.setItems(tempHall.getFlatsAsCollection());
         
-        // Update Flag
+        /**
+         * Update Flag
+         */
         hasChangedRoom = true;
     }
     
@@ -418,21 +425,31 @@ public class ViewLease extends GUI {
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
         
-        // Disable Update Button
+        /**
+         * Disable Update Button
+         */
         btnUpdate.setDisable(true);
         roomNumber.setDisable(false);
         
-        // Clear items from our other ComboBoxes
+        /**
+         * Clear items from our other ComboBoxes
+         */
         roomNumber.getItems().clear();
         
-        // Set our combo box values to null
+        /**
+         * Set our combo box values to null
+         */
         roomNumber.setValue(null);
         
-        // Populate ComboBoxes
+        /**
+         * Populate ComboBoxes
+         */
         Hall tempHall = Database.getHall(Database.getIdFromString((String)hallName.getSelectionModel().getSelectedItem()));
         roomNumber.setItems(tempHall.getRoomsAsCollection((int)flatNumber.getSelectionModel().getSelectedItem()));
         
-        // Update Flag
+        /**
+         * Update Flag
+         */
         hasChangedRoom = true;
     }
     
@@ -460,10 +477,14 @@ public class ViewLease extends GUI {
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
         
-        // Enable Update Lease button
+        /**
+         * Enable Update Lease button
+         */
         btnUpdate.setDisable(false);
         
-        // Update Flag
+        /**
+         * Update Flag
+         */
         hasChangedRoom = true;
     }
     
@@ -491,12 +512,17 @@ public class ViewLease extends GUI {
          */
         AccommodationSystem.debug("New Value: " + newVal + " ---> " + hallName.getSelectionModel().getSelectedIndex());
         
-        // Update Occupancy State
+        /**
+         * Update Occupancy State
+         */
         occupancy.setValue("Occupied");
     }
     
     private void btnUpdate_Click(ActionEvent event, String showType) {
-        // Check our show type
+        /**
+         * Check our show type: this will make it so if we're "viewing" the Lease,
+         * clicking this button will close the GUI and return us back to the Browser.
+         */
         if(showType.equals("view")) {
             try {
                 this.close();
@@ -504,29 +530,28 @@ public class ViewLease extends GUI {
             return;
         }
         
-        // Get Student Data
+        /**
+         * Get Student Data
+         */
         String studentNameData = (String)studentName.getSelectionModel().getSelectedItem();
         Integer studentId = Integer.valueOf(studentNameData.split(":")[0]);
         Student newStudent = Database.getStudentFromId(studentId);
         
-        // Variables
+        /**
+         * Variables
+         */
         Integer previousLeaseId = (this.leaseData.getLeaseId() != null ? this.leaseData.getLeaseId() : null);
         
-        // Debug
-        AccommodationSystem.debug("LEASE ID: " + leaseId.getText());
-        AccommodationSystem.debug("HALL NAME: " + hallName.getSelectionModel().getSelectedItem());
-        AccommodationSystem.debug("FLAT ID: " + flatNumber.getSelectionModel().getSelectedItem());
-        AccommodationSystem.debug("ROOM ID: " + roomNumber.getSelectionModel().getSelectedItem());
-        AccommodationSystem.debug("STUDENT NAME: " + studentName.getSelectionModel().getSelectedItem());
-        AccommodationSystem.debug("OCCUPANCY: " + occupancy.getSelectionModel().getSelectedItem());
-        AccommodationSystem.debug("CLEAN STATUS: " + cleanStatus.getSelectionModel().getSelectedItem());
-        
-        // Validate and Sanitise inputs
+        /**
+         * Validate and Sanitise inputs
+         */
         SimpleIntegerProperty tLeaseId, tHallId, tFlatNumber, tRoomNumber, tOccupiedState, tCleanStatus;
         tHallId = tFlatNumber = tRoomNumber = tOccupiedState = null;
         boolean dataIsValid = true;
         
-        // Check User Permissions
+        /**
+         * Check User Permissions
+         */
         if(User.hasPermission(Permissions.EDIT_LEASE)) {
             // Check Lease ID
             if(leaseId.getText().matches("[0-9]+") && !leaseId.getText().isEmpty()) {
@@ -556,9 +581,11 @@ public class ViewLease extends GUI {
             
             // Check Occupancy of Hall>Flat>Room
             if(dataIsValid) {
+                // Make sure our values are not null
                 if(tHallId == null || tFlatNumber == null || tRoomNumber == null)
                     dataIsValid = false;
                 else {
+                    // Check for an existing lease
                     LeaseData existantLease = Database.getLeaseByHFR(tHallId.intValue(), tFlatNumber.intValue(), tRoomNumber.intValue());
                     
                     // If our lease exists, double check our values
@@ -604,7 +631,9 @@ public class ViewLease extends GUI {
             } else dataIsValid = false;
         }
         
-        // Check User Permissions
+        /**
+         * Check User Permissions
+         */
         if(User.hasPermission(Permissions.EDIT_CLEAN)) {
             // Check Cleaning State
             if(CleaningStatus.getStatuses().contains((String)cleanStatus.getSelectionModel().getSelectedItem())) {
@@ -620,10 +649,16 @@ public class ViewLease extends GUI {
             } else dataIsValid = false;
         }
         
-        // Set our Start and End Dates
+        /**
+         * Set our Start and End Dates
+         * We do this without validation as they're static values
+         */
         this.leaseData.setStartDate(startDate.getText());
         this.leaseData.setEndDate(endDate.getText());
         
+        /**
+         * Check our flag and attempt to update the lease
+         */
         if(dataIsValid) {
             // Validate Lease ID
             if(Database.checkValidLeaseNumber(this.leaseData.getLeaseId()) || (Objects.equals(this.leaseData.getLeaseId(), previousLeaseId))) {
