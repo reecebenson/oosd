@@ -1,6 +1,11 @@
 /*
- * Reece Benson - Bristol UWE
+ * UWE Accommodation System
  * BSc Computer Science
+ * 
+ * Developers:
+ * - Reece Benson
+ * - Chris Tapply
+ * - Jonas Arud
  */
 package accommodationsystem.gui;
 
@@ -64,10 +69,6 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-/**
- *
- * @author simpl_000
- */
 public class Browser extends GUI {
     /**
      * Variables for "Browser" GUI

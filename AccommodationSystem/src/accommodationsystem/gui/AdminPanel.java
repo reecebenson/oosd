@@ -1,12 +1,12 @@
-/**
- * Reece Benson - Bristol UWE
+/*
+ * UWE Accommodation System
  * BSc Computer Science
- *
- * TODO:
- * - Disable all buttons until a table item has been selected OR show an Error Alert when users click a button and a TableRow is not selected
- * - Allow Administrators to create/edit/delete users/rooms/halls/students
+ * 
+ * Developers:
+ * - Reece Benson
+ * - Chris Tapply
+ * - Jonas Arud
  */
-
 package accommodationsystem.gui;
 
 import accommodationsystem.AccommodationSystem;
@@ -60,10 +60,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
-/**
- *
- * @author simpl_000
- */
 public class AdminPanel extends GUI {
     /**
      * Variables

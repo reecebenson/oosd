@@ -1,6 +1,11 @@
 /*
- * Reece Benson - Bristol UWE
+ * UWE Accommodation System
  * BSc Computer Science
+ * 
+ * Developers:
+ * - Reece Benson
+ * - Chris Tapply
+ * - Jonas Arud
  */
 package accommodationsystem.gui;
 
@@ -23,10 +28,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 
-/**
- *
- * @author simpl_000
- */
 public class ViewPermissions extends GUI {
     /**
      * Variables

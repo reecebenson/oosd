@@ -1,13 +1,14 @@
 /*
- * Reece Benson - Bristol UWE
+ * UWE Accommodation System
  * BSc Computer Science
+ * 
+ * Developers:
+ * - Reece Benson
+ * - Chris Tapply
+ * - Jonas Arud
  */
 package accommodationsystem.library;
 
-/**
- *
- * @author simpl_000
- */
 public class LeaseDuration {
     /**
      * Variables

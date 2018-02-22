@@ -1,6 +1,11 @@
 /*
- * Reece Benson - Bristol UWE
+ * UWE Accommodation System
  * BSc Computer Science
+ * 
+ * Developers:
+ * - Reece Benson
+ * - Chris Tapply
+ * - Jonas Arud
  */
 package accommodationsystem.library;
 
@@ -8,10 +13,6 @@ import accommodationsystem.AccommodationSystem;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author simpl_000
- */
 public class User {
     /**
      * Variables
