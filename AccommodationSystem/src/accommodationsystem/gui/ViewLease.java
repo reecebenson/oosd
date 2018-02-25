@@ -204,7 +204,7 @@ public class ViewLease extends GUI {
                 );
         // startDate TextField
         startDate.setStyle("-fx-text-fill: white");
-        startDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(new Date()));   // Displays Current Date as 01-01-1970 for example
+        startDate.setText(this.leaseData.getStartDate());   // Displays Lease Date as 01-01-1970 for example
         startDate.setDisable(true);
         startDate.setPrefWidth(225.0);
         startDate.setPadding(new Insets(11, 5, 11, 5));
