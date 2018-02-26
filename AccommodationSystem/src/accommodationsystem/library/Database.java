@@ -210,11 +210,9 @@ public class Database {
 
                     // Build Query
                     permQuery = permissions.stream().map((_item) -> "(?, ?),").reduce(permQuery, String::concat);
-                    System.out.println(permQuery);
 
                     // Change last comma to semi-colon
                     permQuery = permQuery.substring(0, permQuery.length()-1) + ";";
-                    System.out.println(permQuery);
 
                     // Prepare our Query
                     prepStatement2 = Database._conn.prepareStatement(permQuery);
@@ -306,11 +304,9 @@ public class Database {
 
                         // Build Query
                         permQuery = permissions.stream().map((_item) -> "(?, ?),").reduce(permQuery, String::concat);
-                        System.out.println(permQuery);
 
                         // Change last comma to semi-colon
                         permQuery = permQuery.substring(0, permQuery.length()-1) + ";";
-                        System.out.println(permQuery);
 
                         // Prepare our Query
                         prepStatement = Database._conn.prepareStatement(permQuery);
@@ -762,6 +758,59 @@ public class Database {
         
         return false;
     }
+    
+    /**
+     * @name    updateRoom
+     * @desc    Update a Rooms Details
+     * 
+     * @param   roomData
+     * @return  boolean
+     */
+    public static boolean updateRoom(Room roomData) {
+        // Check if user is logged in
+        if(!User.loggedIn())
+            return false;
+        
+        // Update Cleaning Status
+        boolean updateComplete = false;
+        PreparedStatement prepStatement = null, prepStatement2 = null;
+        String query = "UPDATE `rooms` SET `hall_id` = ?, `flat_id` = ?, `room_id` = ?, `monthly_price` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?",
+              query2 = "UPDATE `leases` SET `hall_id` = ?, `flat_id` = ?, `room_id` = ? WHERE `room_id` = ? AND `flat_id` = ? AND `hall_id` = ?";
+
+        try {
+            prepStatement = Database._conn.prepareStatement(query);
+            prepStatement.setInt(1, roomData.getHallId());
+            prepStatement.setInt(2, roomData.getFlatId());
+            prepStatement.setInt(3, roomData.getRoomId());
+            prepStatement.setInt(4, roomData.getMonthlyPrice());
+            prepStatement.setInt(5, roomData.getRoomId());
+            prepStatement.setInt(6, roomData.getFlatId());
+            prepStatement.setInt(7, roomData.getHallId());
+            prepStatement.executeUpdate();
+            
+            prepStatement2 = Database._conn.prepareStatement(query2);
+            prepStatement2.setInt(1, roomData.getHallId());
+            prepStatement2.setInt(2, roomData.getFlatId());
+            prepStatement2.setInt(3, roomData.getRoomId());
+            prepStatement2.setInt(4, roomData.getRoomId());
+            prepStatement2.setInt(5, roomData.getFlatId());
+            prepStatement2.setInt(6, roomData.getHallId());
+            prepStatement2.executeUpdate();
+            
+            updateComplete = true;
+        } catch(SQLException ex) {
+            AccommodationSystem.debug(ex.getMessage());
+            updateComplete = false;
+        } finally {
+            try {
+                if(prepStatement != null) prepStatement.close();
+                if(prepStatement2 != null) prepStatement2.close();
+            }catch(Exception x) {}
+        }
+        
+        return updateComplete;
+    }
+    
     
     /**
      * @name    updateRoom

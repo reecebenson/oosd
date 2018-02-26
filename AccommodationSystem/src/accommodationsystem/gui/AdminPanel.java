@@ -983,13 +983,42 @@ public class AdminPanel extends GUI {
                 if(result.get()) {
                     // Validate Room Stuff
                     if(!(rdHallId.getText().isEmpty() && rdFlatId.getText().isEmpty() && rdRoomId.getText().isEmpty() && rdMonthlyPrice.getText().isEmpty())) {
-                        //Database.updateHall(new Hall(rrSelected.getHallId(), rdHallId.getText(), rdFlatId.getText(), rdRoomId.getText(), rdMonthlyPrice.getText(), cbHallPhone.getText(), -1));
-                        
-                        // clear table
-                        // update table
-                        System.out.println("edit room clicked");
+                        // Validate Hall ID
+                        if(Database.getHallIds(false).contains(Integer.valueOf(rdHallId.getText()))) {
+                            // See if user has updated room details
+                            if(rrSelected.getRoomId().toString().equals(rdRoomId.getText()) && rrSelected.getFlatId().toString().equals(rdFlatId.getText()) && rrSelected.getHallId().toString().equals(rdHallId.getText())) {
+                                // Create Room & Lease
+                                Database.updateRoom(new Room(Integer.valueOf(rdRoomId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdHallId.getText()), 0, 0, Integer.valueOf(rdMonthlyPrice.getText())));
+
+                                // Rebuild Table
+                                tbl.getItems().clear();
+                                ObservableList<RoomRow> rbRooms = FXCollections.observableArrayList();
+                                Database.getRoomsAsRow().stream().forEach((r) -> {
+                                    rbRooms.add(new RoomRow(r.getRoomId(), r.getFlatId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
+                                });
+                                tbl.setItems(rbRooms);
+                            } else {
+                                // Validate HFR IDs
+                                if(Database.getLeaseByHFR(Integer.valueOf(rdHallId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdRoomId.getText())) == null) {
+                                    // Create Room & Lease
+                                    Database.updateRoom(new Room(Integer.valueOf(rdRoomId.getText()), Integer.valueOf(rdFlatId.getText()), Integer.valueOf(rdHallId.getText()), 0, 0, Integer.valueOf(rdMonthlyPrice.getText())));
+
+                                    // Rebuild Table
+                                    tbl.getItems().clear();
+                                    ObservableList<RoomRow> rbRooms = FXCollections.observableArrayList();
+                                    Database.getRoomsAsRow().stream().forEach((r) -> {
+                                        rbRooms.add(new RoomRow(r.getRoomId(), r.getFlatId(), r.getHallId(), r.getOccupied(), r.getCleanStatus(), r.getMonthlyPrice()));
+                                    });
+                                    tbl.setItems(rbRooms);
+                                } else {
+                                    new Alert(Alert.AlertType.ERROR, "Unable to modify Room! A room already exists with the inputted Hall Id, Flat Id and Room Id.", ButtonType.OK).showAndWait();
+                                }
+                            }
+                        } else {
+                            new Alert(Alert.AlertType.ERROR, "Unable to modify Room! Please select a valid Hall ID.", ButtonType.OK).showAndWait();
+                        }
                     } else {
-                        new Alert(Alert.AlertType.ERROR, "Unable to create Room!", ButtonType.OK).showAndWait();
+                        new Alert(Alert.AlertType.ERROR, "Unable to modify Room!", ButtonType.OK).showAndWait();
                     }
                 }
             }

@@ -541,10 +541,10 @@ public class Browser extends GUI {
                 // Update Lease Data
                if(!lease.getCleanStatusName().equals(newVal)) {
                    lease.setCleanStatus(new SimpleIntegerProperty((int)CleaningStatus.getId((String)newVal)));
-                   
+
                    // Update Room
                    Database.updateRoom(lease);
-                   
+
                    // Rebuild Table
                    this.buildTable(_currentHallView);
                }
@@ -808,7 +808,7 @@ public class Browser extends GUI {
         
         // Update ComboBox
         comboChangeCleanStatus.setValue(lease.getCleanStatusName());
-        comboChangeCleanStatus.setDisable(lease.getCleanStatusName().equals("Offline") && !User.hasPermission(Permissions.MANAGE_OFFLINE));
+        comboChangeCleanStatus.setDisable(User.hasPermission(Permissions.EDIT_CLEAN) ? lease.getCleanStatusName().equals("Offline") && !User.hasPermission(Permissions.MANAGE_OFFLINE) : true);
     }
     
     /**

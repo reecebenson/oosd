@@ -204,7 +204,7 @@ public class ViewLease extends GUI {
                 );
         // startDate TextField
         startDate.setStyle("-fx-text-fill: white");
-        startDate.setText(this.leaseData.getStartDate());   // Displays Lease Date as 01-01-1970 for example
+        startDate.setText(this.leaseData.getStartDate() != null ? this.leaseData.getStartDate() : new SimpleDateFormat("dd-MM-yyyy").format(new Date()));   // Displays Lease Date as 01-01-1970 for example
         startDate.setDisable(true);
         startDate.setPrefWidth(225.0);
         startDate.setPadding(new Insets(11, 5, 11, 5));
@@ -246,6 +246,7 @@ public class ViewLease extends GUI {
          * Override Style Elements in accordance to showType
          */
         switch(showType) {
+            case "update":
             case "create": {
                 /**
                  * Style Elements in accordance to Permissions
@@ -260,7 +261,7 @@ public class ViewLease extends GUI {
                     cleanStatus.setDisable(true);
                 }
                 
-                btnUpdate.setText("Create Lease");
+                btnUpdate.setText(showType.equals("update") ? "Update Lease" : "Create Lease");
             }
             break;
                 
@@ -534,6 +535,13 @@ public class ViewLease extends GUI {
         /**
          * Get Student Data
          */
+        // Validate
+        if(studentName.getSelectionModel().isEmpty()) {
+            new Alert(Alert.AlertType.ERROR, "The data you have supplied is invalid.", ButtonType.OK).showAndWait();
+            return;
+        }
+        
+        // Get
         String studentNameData = (String)studentName.getSelectionModel().getSelectedItem();
         Integer studentId = Integer.valueOf(studentNameData.split(":")[0]);
         Student newStudent = Database.getStudentFromId(studentId);
