@@ -353,7 +353,11 @@ public class AdminPanel extends GUI {
                 // Make sure we've pressed the 'Create User' button
                 if(result.get()) {
                     // Validate inputs
-                    if(!(udUsername.getText().isEmpty() && udPassword.getText().isEmpty() && udAllocatedHall.getValue() != null)) {
+                    if(udUsername.getText().isEmpty() || udPassword.getText().isEmpty()){
+                        new Alert(Alert.AlertType.ERROR, "You have to enter a username and password", ButtonType.OK).showAndWait();
+                    }
+                    else if(!(udUsername.getText().isEmpty() && udPassword.getText().isEmpty() && udAllocatedHall.getValue() != null)) {
+                        
                         // Permissions
                         List<String> permissions = new ArrayList<>();
                         
@@ -438,7 +442,10 @@ public class AdminPanel extends GUI {
                 // Make sure we've pressed the 'Create User' button
                 if(result.get()) {
                     // Validate inputs
-                    if(!(udUsername.getText().isEmpty() && udPassword.getText().isEmpty() && udAllocatedHall.getValue() != null)) {
+                    if(udUsername.getText().isEmpty() || udPassword.getText().isEmpty()){
+                        new Alert(Alert.AlertType.ERROR, "You have to enter a username and password", ButtonType.OK).showAndWait();
+                    }
+                    else if(!(udUsername.getText().isEmpty() && udPassword.getText().isEmpty() && udAllocatedHall.getValue() != null)) {
                         // Permissions
                         List<String> permissions = new ArrayList<>();
                         
@@ -1162,7 +1169,10 @@ public class AdminPanel extends GUI {
             /**
              * Create Student
              */
-            if(firstName != null && lastName != null) {
+            if(isValid(firstName) || isValid(lastName)){
+                new Alert(Alert.AlertType.ERROR, "Name can't contain a number. Try again", ButtonType.OK).showAndWait();
+            }
+            else if(firstName != null && lastName != null) {
                 if(Database.createStudent(firstName, lastName)) {
                     new Alert(Alert.AlertType.CONFIRMATION, firstName + " " + lastName + " was created as a student.", ButtonType.OK).showAndWait();
                     
@@ -1197,6 +1207,12 @@ public class AdminPanel extends GUI {
             Alert confirmDeletion = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete " + srSelected.getFirstName() + " " + srSelected.getLastName() + "?", ButtonType.YES, ButtonType.NO);
             Optional<ButtonType> r = confirmDeletion.showAndWait();
             if(r.get() == ButtonType.YES) {
+                // Check Student doesn't have a lease
+                if(Database.getAssignedStudentsIds().contains(srSelected.getId())) {
+                    new Alert(Alert.AlertType.ERROR, "This student has a lease so therefore cannot be deleted.", ButtonType.OK).showAndWait();
+                    return;
+                }
+                
                 // Deletion Confirmed
                 if(Database.deleteStudent(srSelected.getId())) {
                     // Clear Table
@@ -1304,7 +1320,19 @@ public class AdminPanel extends GUI {
         super.setSize(750, 750);
         super.finalise(true);
     }
-    
+    /**
+    * @name     isValid
+    * @desc     This is used to check if the student names contains characters,
+    *           numbers or numbers and letters
+    * 
+    * @param s
+    */
+    private boolean isValid(String s){
+        String numbsAndLetters = "[0-9a-zA-Z]+";
+        String charsOnly = "[a-zA-Z]+";
+        String numbsOnly = "[0-9]+";
+        return !s.matches(charsOnly) && (s.matches(numbsOnly) || s.matches(numbsAndLetters));
+    }
     /**
      * @name    tfValidateNumber_Changed
      * @desc    This is used by multiple text fields which are parsed through as the
